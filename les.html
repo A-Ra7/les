@@ -1,0 +1,4828 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Посади Лес</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1200px;
+            width: 100%;
+            gap: 15px;
+        }
+        
+        .left-panel, .right-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .center-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            text-align: center;
+        }
+        
+        .container h1 {
+            color: #2E7D32;
+            margin: 12px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            font-size: 40px;
+        }
+        
+        .game-info {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        
+        .counter {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+            white-space: nowrap;
+        }
+        
+        .trees-counter {
+            color: #2E7D32;
+        }
+        
+        .chopped-counter {
+            color: #D32F2F;
+        }
+        
+        .score-counter {
+            color: #1976D2;
+        }
+        
+        .level-counter {
+            color: #7B1FA2;
+        }
+        
+        .game-field {
+            background-color: #8BC34A;
+            border: 3px solid #5D4037;
+            border-radius: 10px;
+            height: 400px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: crosshair;
+            margin-bottom: 3px;
+            width: 100%;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .game-field.cursor-red {
+            cursor: not-allowed;
+        }
+        
+        .game-field.cursor-green {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%234CAF50'/%3E%3Cpath fill='white' d='M12 17v-4h-4v-2h4V7h2v4h4v2h-4v4z'/%3E%3C/svg%3E") 12 12, crosshair;
+        }
+        
+        .game-field.cursor-yellow {
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%23FFC107'/%3E%3Cpath fill='white' d='M12 17v-4h-4v-2h4V7h2v4h4v2h-4v4z'/%3E%3C/svg%3E") 12 12, crosshair;
+        }
+        
+        .game-field.cursor-red-not-allowed {
+            cursor: not-allowed;
+        }
+        
+        .game-field:active {
+            outline: none;
+        }
+        
+        .bush, .flower, .grass, .rock {
+            position: absolute;
+            z-index: 0;
+            user-select: none;
+            pointer-events: none;
+        }
+        
+        .bush {
+            font-size: 10px;
+        }
+        
+        .flower {
+            font-size: 7px;
+        }
+        
+        .grass {
+            font-size: 8px;
+        }
+        
+        .rock {
+            font-size: 9px;
+        }
+        
+        .tree-container {
+            position: absolute;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transform-origin: center;
+        }
+        
+        .tree {
+            font-size: 30px;
+            user-select: none;
+            transition: transform 0.3s;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .tree-hitbox {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            touch-action: manipulation;
+        }
+        
+        .tree:hover {
+            transform: scale(1.1);
+        }
+        
+        .tree-progress {
+            width: 40px;
+            height: 5px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 3px;
+            overflow: hidden;
+            transition: opacity 0.5s;
+        }
+        
+        .tree-progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .tree-health-bar {
+            width: 40px;
+            height: 5px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 2px;
+            display: none;
+        }
+        
+        .tree-health-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        .water-puddle {
+            position: absolute;
+            bottom: 15px;
+            width: 25px;
+            height: 8px;
+            background-color: #2196F3;
+            border-radius: 50%;
+            opacity: 0.7;
+            z-index: 1;
+            transition: opacity 0.5s;
+        }
+        
+        .lumberjack {
+            position: absolute;
+            user-select: none;
+            z-index: 10;
+            transition: transform 0.1s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lumberjack-hitbox {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 11;
+            touch-action: manipulation;
+        }
+        
+        .lumberjack-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .lumberjack-axe {
+            font-size: 16px;
+            margin-right: 0;
+            order: 1;
+            position: absolute;
+            left: -12px;
+            top: 2px;
+            z-index: 12;
+        }
+        
+        .lumberjack-face {
+            font-size: 28px;
+            order: 2;
+            margin-left: 8px;
+            z-index: 11;
+        }
+        
+        .lumberjack-armor-bar {
+            width: 30px;
+            height: 5px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 2px;
+            order: 3;
+        }
+        
+        .lumberjack-armor-fill {
+            height: 100%;
+            background-color: #795548;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 100%;
+            user-select: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
+        }
+        
+        button:hover, button:active {
+            background-color: #2bde34;
+        }
+        
+        #resetButton {
+            background-color: #F44336;
+        }
+        
+        #resetButton:hover, #resetButton:active {
+            background-color: #ff0000;
+        }
+        
+        #pauseButton {
+            background-color: #FF9800;
+        }
+        
+        #pauseButton:hover, #pauseButton:active{
+            background-color: #ffc200;
+        }
+        
+        .alert {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(244, 67, 54, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            font-size: 14px;
+        }
+        
+        .level-up-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(to right, #7B1FA2, #9C27B0);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 22px;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            animation: levelUpPulse 2s infinite;
+            min-width: 250px;
+            max-width: 90%;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        
+        @keyframes levelUpPulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 10px #7B1FA2;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.05);
+                box-shadow: 0 0 30px #9C27B0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 0 10px #7B1FA2;
+            }
+        }
+        
+        .place-security-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #FF9800, #FF5722);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 3s ease-in-out;
+            max-width: 90%;
+        }
+        
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            15% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            85% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+        }
+        
+        .lumberjack-timer {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 5;
+            min-width: 180px;
+            text-align: center;
+            display: none;
+        }
+        
+        .score-alert {
+            position: absolute;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 10;
+            pointer-events: none;
+            animation: floatUp 1.5s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 16px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        .level-info {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #7B1FA2;
+            font-weight: bold;
+        }
+        
+        .level-progress {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        
+        .level-progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #7B1FA2, #9C27B0);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .victory-message, .game-over-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+            display: none;
+            max-width: 90%;
+            width: 400px;
+        }
+        
+        .victory-message h2 {
+            color: #FFD700;
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .game-over-message h2 {
+            color: #D32F2F;
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .victory-message p, .game-over-message p {
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        
+        .tree-types-info {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .tree-types-info h3 {
+            color: #2E7D32;
+            margin-bottom: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .tree-types-grid {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        
+        .tree-type {
+            text-align: center;
+            margin: 8px;
+            flex: 1 0 40%;
+        }
+        
+        .tree-type-icon {
+            font-size: 24px;
+            margin-bottom: 3px;
+        }
+        
+        .plant-timer {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 5;
+            max-width: 120px;
+        }
+        
+        .growing {
+            transform: scale(0.5);
+            opacity: 0.7;
+            transition: transform 16s linear, opacity 16s linear;
+        }
+        
+        .grown {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .river {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(to bottom, #1E88E5, #0D47A1);
+            z-index: 3;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            border-top: 3px solid #0D47A1;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .bucket-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 5;
+            max-width: 130px;
+            text-align: center;
+        }
+        
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(139, 195, 74, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            color: white;
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .start-screen h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .start-screen p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        
+        .high-score-display {
+            font-size: 18px;
+            color: #FFD700;
+            margin: 10px 0;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .start-timer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .plant-first-tree {
+            font-size: 18px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .water-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(33,150,243,0.3) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 4;
+        }
+        
+        .water-animation {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(33,150,243,0.7) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 4;
+            animation: waterRipple 1s ease-out forwards;
+        }
+        
+        @keyframes waterRipple {
+            0% {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+        
+        .empty-bucket-alert, .already-watered-alert {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 5;
+            pointer-events: none;
+            animation: fadeOut 2s ease-out forwards;
+            max-width: 120px;
+            text-align: center;
+        }
+        
+        .already-watered-alert {
+            background-color: rgba(33, 150, 243, 0.7);
+        }
+        
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            70% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+        
+        .paused-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .shop {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .shop h3 {
+            color: #2E7D32;
+            margin-bottom: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 5px;
+        }
+        
+        .shop-item-info {
+            flex-grow: 1;
+            text-align: left;
+        }
+        
+        .shop-item-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 14px;
+        }
+
+        .shop-item-title span {
+            font-size: 18px;
+        }
+        
+        .shop-item-description {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .shop-item-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 9px 7px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            width: 200px;
+            margin: 12px;
+            touch-action: manipulation;
+            min-height: 40px;
+        }
+        
+        .shop-item-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .upgrades-info {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+        
+        .upgrades-info h3 {
+            color: #2E7D32;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+        
+        .upgrade-item {
+            display: flex;
+            margin: 4px 0;
+            font-size: 14px;
+        }
+
+        .upgrade-item span{
+            margin-right: 3px;
+        }
+
+        .hotkeys {
+            font-size: 14px;
+        }
+        
+        .security-guard {
+            position: absolute;
+            font-size: 24px;
+            z-index: 4;
+            pointer-events: none;
+        }
+        
+        .security-range {
+            position: absolute;
+            border: 2px dashed #FFD700;
+            border-radius: 50%;
+            background-color: rgba(255, 215, 0, 0.1);
+            z-index: 3;
+            pointer-events: none;
+        }
+        
+        .security-catch {
+            position: absolute;
+            font-size: 16px;
+            z-index: 10;
+            pointer-events: none;
+            animation: securityCatch 1s ease-out forwards;
+        }
+        
+        @keyframes securityCatch {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+        
+        .lumberjack-leaving {
+            animation: lumberjackLeave 1.5s ease-out forwards;
+        }
+        
+        @keyframes lumberjackLeave {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+        }
+        
+        .armor-hit {
+            animation: armorHit 0.3s ease-out;
+        }
+        
+        @keyframes armorHit {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .tree-damage {
+            animation: treeDamage 0.3s ease-out;
+        }
+        
+        @keyframes treeDamage {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .axe-swing {
+            animation: axeSwing 0.5s ease-in-out;
+        }
+        
+        @keyframes axeSwing {
+            0% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-30deg);
+            }
+            50% {
+                transform: rotate(60deg);
+            }
+            75% {
+                transform: rotate(-20deg);
+            }
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+        
+        .axe-swing-continuous {
+            animation: axeSwingContinuous 0.8s infinite ease-in-out;
+        }
+        
+        @keyframes axeSwingContinuous {
+            0% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-25deg);
+            }
+            50% {
+                transform: rotate(25deg);
+            }
+            75% {
+                transform: rotate(-15deg);
+            }
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+        
+        .water-instruction-alert, .water-success-alert, .chopped-alert, .water-first-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 3s ease-in-out;
+            max-width: 90%;
+        }
+        
+        .water-instruction-alert {
+            background: linear-gradient(to right, #2196F3, #1976D2);
+            animation: fadeInOut 5s ease-in-out;
+        }
+        
+        .water-first-alert {
+            background: linear-gradient(to right, #2196F3, #1976D2);
+            animation: fadeInOut 3s ease-in-out;
+        }
+        
+        .water-success-alert {
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+        }
+        
+        .chopped-alert {
+            background-color: rgba(244, 67, 54, 0.9);
+            animation: fadeInOut 1.5s ease-in-out;
+        }
+        
+        .finger-icon {
+            position: absolute;
+            font-size: 20px;
+            z-index: 15;
+            pointer-events: none;
+            display: none;
+            animation: fingerWiggle 1s infinite;
+            transform: translate(-50%, -50%);
+        }
+        
+        @keyframes fingerWiggle {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+            }
+            25% {
+                transform: translate(-50%, -50%) rotate(10deg) scale(1.1);
+            }
+            50% {
+                transform: translate(-50%, -50%) rotate(-10deg) scale(1);
+            }
+            75% {
+                transform: translate(-50%, -50%) rotate(5deg) scale(1.1);
+            }
+            100% {
+                transform: translate(-50%, -50%) rotate(0deg) scale(1);
+            }
+        }
+        
+        .finger-hit {
+            animation: fingerHit 0.5s ease-out forwards;
+        }
+        
+        @keyframes fingerHit {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .sound-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 7px;
+            z-index: 1000;
+        }
+        
+        .sound-button {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 20px;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+            touch-action: manipulation;
+            min-height: 40px;
+        }
+        
+        .sound-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .sound-button.muted {
+            opacity: 0.6;
+        }
+        
+        .upgrade-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 3s ease-in-out;
+            max-width: 90%;
+        }
+        
+        .upgrade-alert-faster-plant {
+            background: linear-gradient(to right, #e3d512, #cdd40a);
+        }
+        
+        .upgrade-alert-faster-grow {
+            background: linear-gradient(to right, #14da21, #10b90a);
+        }
+
+        .mobile-pause-button {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 18px;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+            touch-action: manipulation;
+            z-index: 1001;
+            font-weight: bold;
+            color: #FF9800;
+            display: none;
+        }
+        
+        .mobile-pause-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .mobile-reset-button {
+            position: fixed;
+            top: 10px;
+            left: 58px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 18px;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+            touch-action: manipulation;
+            z-index: 1001;
+            font-weight: bold;
+            color: #F44336;
+            display: none;
+        }
+        
+        .mobile-reset-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        /* Новые стили для мобильных кнопок магазина */
+        .mobile-shop-buttons {
+            display: none;
+            width: 100%;
+            margin-top: 3px;
+            gap: 7px;
+            justify-content: center;
+        }
+        
+        .mobile-shop-button {
+            flex: 1;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 3px 7px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            user-select: none;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mobile-shop-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        
+        .mobile-shop-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mobile-shop-button-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .mobile-shop-button-text {
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.2;
+        }
+        
+        .mobile-shop-button-price {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        
+        #mobilePlantSpeedButton {
+            background: linear-gradient(to bottom, #ffee00, #a9ae13);
+        }
+        
+        #mobileGrowthBoostButton {
+            background: linear-gradient(to bottom, #00ff08, #13ab1b);
+        }
+        
+        #mobileSecurityButton {
+            background: linear-gradient(to bottom, #ffa200, #cf6d0c);
+        }
+        
+        /* Кнопка полноэкранного режима */
+        .mobile-fullscreen-button {
+            position: fixed;
+            top: 10px;
+            left: 106px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 18px;
+            border: none;
+            outline: none;
+            transition: background-color 0.3s;
+            touch-action: manipulation;
+            z-index: 1001;
+            font-weight: bold;
+            color: #2196F3;
+            display: none;
+        }
+        
+        .mobile-fullscreen-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .mobile-fullscreen-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* Анимация для кнопок на мобильных устройствах */
+        @keyframes buttonClick {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.95);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .mobile-button-click {
+            animation: buttonClick 0.2s ease;
+        }
+        
+        /* Уведомление о первой поимке лесоруба */
+        .first-lumberjack-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 3s ease-in-out;
+            max-width: 90%;
+            line-height: 1.4;
+        }
+        
+        /* Улучшения для полноэкранного режима */
+        :fullscreen {
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+        }
+        
+        :-webkit-full-screen {
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+        }
+        
+        :-moz-full-screen {
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+        }
+        
+        :-ms-fullscreen {
+            background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+        }
+        
+        @media (max-width: 480px) {
+            .container h1 {
+                font-size: 30px;
+            }
+
+            .game-info {
+                margin-top: 52px;
+            }
+            
+            .game-field {
+                height: calc(100vh - 200px);
+                max-height: 450px;
+                min-height: 350px;
+            }
+            
+            .counter {
+                font-size: 14px;
+            }
+            
+            .tree {
+                font-size: 25px;
+            }
+            
+            .tree-hitbox {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .lumberjack-face {
+                font-size: 24px;
+            }
+            
+            .lumberjack-axe {
+                font-size: 14px;
+                left: -10px;
+            }
+            
+            .lumberjack-hitbox {
+                width: 55px;
+                height: 55px;
+            }
+            
+            .tree-type {
+                flex: 1 0 45%;
+            }
+            
+            .tree-type-icon {
+                font-size: 20px;
+            }
+
+            .controls {
+                display: none;
+            }
+            
+            button {
+                padding: 10px 12px;
+                font-size: 15px;
+                min-height: 40px;
+            }
+            
+            .victory-message, .game-over-message {
+                width: 90%;
+                padding: 15px;
+            }
+            
+            .victory-message h2, .game-over-message h2 {
+                font-size: 24px;
+            }
+
+            .tree-types-info {
+                display: none;
+            }
+            
+            .sound-button {
+                font-size: 18px;
+                min-height: 40px;
+            }
+            
+            .shop-item-button {
+                width: 150px;
+                margin: 8px;
+                padding: 8px 6px;
+                font-size: 12px;
+                min-height: 36px;
+            }
+            
+            .mobile-pause-button {
+                display: none;
+                font-size: 18px;
+                min-height: 40px;
+            }
+            
+            .mobile-reset-button {
+                display: none;
+                font-size: 18px;
+                min-height: 40px;
+            }
+            
+            .victory-message button,
+            .game-over-message button {
+                min-height: 50px;
+                font-size: 18px;
+                padding: 15px;
+                background-color: #4CAF50;
+                margin-top: 10px;
+            }
+            
+            .victory-message button:hover,
+            .game-over-message button:hover,
+            .victory-message button:active,
+            .game-over-message button:active {
+                background-color: #2bde34;
+            }
+            
+            /* Показываем мобильные кнопки магазина */
+            .mobile-shop-buttons {
+                display: none;
+            }
+            
+            .right-panel {
+                display: none;
+            }
+            
+            .left-panel {
+                display: none;
+            }
+            
+            .center-panel {
+                width: 100%;
+            }
+            
+            /* Показываем кнопку полноэкранного режима на мобильных устройствах */
+            .mobile-fullscreen-button {
+                display: none;
+            }
+            
+            /* Улучшаем отступы для мобильных устройств */
+            .container {
+                padding: 0 5px;
+            }
+            
+            .game-info {
+                padding: 8px 5px;
+                display: none;
+            }
+            
+            .counter {
+                font-size: 12px;
+                margin: 2px;
+            }
+            
+            .game-container {
+                max-width: 100%;
+                padding: 5px;
+            }
+            
+            .high-score-display {
+                font-size: 16px;
+                margin: 8px 0;
+            }
+            
+            .progress-bar, .level-progress {
+                display: none;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .game-container {
+                flex-direction: row;
+            }
+            
+            .left-panel, .right-panel {
+                width: 25%;
+                display: flex;
+            }
+            
+            .center-panel {
+                width: 50%;
+            }
+            
+            .game-field {
+                height: 500px;
+            }
+            
+            .mobile-shop-buttons {
+                display: none;
+            }
+            
+            .mobile-fullscreen-button {
+                display: none;
+            }
+            
+            .mobile-reset-button {
+                display: none;
+            }
+            
+            .progress-bar, .level-progress {
+                display: block;
+            }
+        }
+        
+        @media (min-width: 481px) and (max-width: 768px) {
+            .container h1 {
+                margin-top: 50px;
+                font-size: 30px;
+            }
+
+            .game-info {
+                margin-top: 52px;
+            }
+
+            .game-field {
+                height: 450px;
+            }
+            
+            .tree {
+                font-size: 35px;
+            }
+            
+            .tree-types-grid {
+                flex-wrap: nowrap;
+            }
+            
+            .tree-type {
+                flex: 1;
+            }
+
+            .tree-types-info {
+                display: none;
+            }
+
+            .controls {
+                display: none;
+            }
+            
+            .shop-item-button {
+                width: 180px;
+                margin: 10px;
+            }
+            
+            .mobile-pause-button {
+                display: none;
+                font-size: 18px;
+                min-height: 40px;
+            }
+            
+            .mobile-reset-button {
+                display: none;
+                font-size: 18px;
+                min-height: 40px;
+            }
+            
+            .mobile-shop-buttons {
+                display: none;
+            }
+            
+            .right-panel {
+                display: none;
+            }
+            
+            .left-panel {
+                display: none;
+            }
+            
+            .center-panel {
+                width: 100%;
+            }
+            
+            .mobile-fullscreen-button {
+                display: none;
+                left: 110px;
+            }
+            
+            .progress-bar, .level-progress {
+                display: none;
+            }
+        }
+        
+        @media (max-height: 600px) and (orientation: landscape) {
+            .game-field {
+                height: calc(100vh - 150px);
+                max-height: 300px;
+            }
+            
+            .game-info {
+                flex-wrap: nowrap;
+                padding: 5px;
+            }
+            
+            .counter {
+                font-size: 12px;
+                margin: 2px;
+            }
+            
+            h1 {
+                margin-bottom: 8px;
+                font-size: 18px;
+            }
+            
+            .tree-types-info {
+                display: none;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            .controls2 {
+                display: flex;
+            }
+            
+            .sound-button {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+                min-height: 40px;
+            }
+            
+            .mobile-pause-button {
+                display: none;
+                font-size: 16px;
+                min-height: 40px;
+            }
+            
+            .mobile-reset-button {
+                display: none;
+                font-size: 16px;
+                min-height: 40px;
+                left: 40px;
+            }
+            
+            .mobile-shop-buttons {
+                display: none;
+            }
+            
+            .right-panel {
+                display: none;
+            }
+            
+            .left-panel {
+                display: none;
+            }
+            
+            .center-panel {
+                width: 100%;
+            }
+            
+            .mobile-fullscreen-button {
+                display: none;
+                font-size: 16px;
+                min-height: 40px;
+                left: 70px;
+            }
+            
+            body {
+                padding: 0;
+            }
+            
+            .container {
+                padding: 0 5px;
+            }
+            
+            .progress-bar, .level-progress {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="mobile-pause-button" id="mobilePauseButton" title="Пауза">⏸</button>
+    <button class="mobile-reset-button" id="mobileResetButton" title="Сбросить игру">🔄</button>
+    <button class="mobile-fullscreen-button" id="mobileFullscreenButton" title="Полный экран">⛶</button>
+    
+    <div class="sound-controls">
+        <button class="sound-button" id="musicToggle" title="Музыка">🎵</button>
+        <button class="sound-button" id="soundToggle" title="Звуки">🔊</button>
+    </div>
+    
+    <div class="container">
+        <h1 id="main-header">Посади Лес</h1>
+        
+        <div class="game-info" id="gameInfo">
+            <div class="counter trees-counter">Деревья: <span id="treeCount">0</span></div>
+            <div class="counter chopped-counter">Срублено: <span id="choppedCount">0</span></div>
+            <div class="counter score-counter">Очки: <span id="scoreCount">0</span></div>
+            <div class="counter level-counter">Уровень: <span id="level">1</span>/12</div>
+        </div>
+        
+        <div class="level-progress" id="levelProgress">
+            <div class="level-progress-bar" id="levelProgressBar"></div>
+        </div>
+        
+        <div class="progress-bar" id="progressBarContainer">
+            <div class="progress" id="progressBar"></div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div class="left-panel">
+            <div class="tree-types-info">
+                <h3>Типы деревьев:</h3>
+                <div class="tree-types-grid">
+                    <div class="tree-type">
+                        <div class="tree-type-icon">🌲</div>
+                        <div>Уровень 1-3</div>
+                        <div>7с / 1❤️</div>
+                    </div>
+                    <div class="tree-type">
+                        <div class="tree-type-icon">🌳</div>
+                        <div>Уровень 4-6</div>
+                        <div>7с / 2❤️</div>
+                    </div>
+                    <div class="tree-type">
+                        <div class="tree-type-icon">🌴</div>
+                        <div>Уровень 7-9</div>
+                        <div>7с / 3❤️</div>
+                    </div>
+                    <div class="tree-type">
+                        <div class="tree-type-icon">🎄</div>
+                        <div>Уровень 10-12</div>
+                        <div>7с / 4❤️</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startButton">Начать игру</button>
+                <button id="pauseButton">Пауза</button>
+                <button id="resetButton">Сбросить игру</button>
+            </div>
+        </div>
+        
+        <div class="center-panel">
+            <div class="game-field" id="gameField">
+                <div class="upgrade-alert upgrade-alert-faster-plant" id="plantSpeedAlert">Деревья садятся теперь быстрее</div>
+                <div class="upgrade-alert upgrade-alert-faster-grow" id="growthBoostAlert">Деревья растут теперь быстрее</div>
+                <div class="first-lumberjack-alert" id="firstLumberjackAlert">Поймай как можно больше нелегальных лесорубов</div>
+                
+                <div class="start-screen" id="startScreen">
+                    <h2>Посади Лес</h2>
+                    <p>Твоя задача - посадить как можно больше деревьев и защитить их от нелегальных лесорубов. Нажимай на поле, чтобы посадить деревья, и на речку, чтобы набрать воды для полива.</p>
+                    <div id="startScreenHighScore" class="high-score-display">Рекорд состояния леса: 0%</div>
+                    <button id="startScreenButton" style="width: auto; padding: 12px 25px; font-size: 18px; min-height: 50px;">Начать игру</button>
+                </div>
+                <div class="plant-timer" id="plantTimer">Можно сажать: 0с</div>
+                <div class="lumberjack-timer" id="lumberjackTimer">Нелегальные лесорубы через: 20с</div>
+                <div class="bucket-indicator" id="bucketIndicator">Пустое ведро - сходи к речке</div>
+                <div class="river" id="river">🌊 Речка - набери воды</div>
+                <div class="start-timer" id="startTimer">
+                    <div>10</div>
+                    <div class="plant-first-tree">Посади первое дерево</div>
+                </div>
+                <div class="paused-overlay" id="pausedOverlay">ПАУЗА</div>
+                <div class="place-security-alert" id="placeSecurityAlert">Выбери место для охраны</div>
+                <div class="water-instruction-alert" id="waterInstructionAlert">Нажми на речку, набери воды</div>
+                <div class="water-first-alert" id="waterFirstAlert">Теперь нажми на молодое дерево, чтобы полить его</div>
+                <div class="water-success-alert" id="waterSuccessAlert">Дерево растёт теперь быстрее</div>
+                <div class="chopped-alert" id="choppedAlert">Нелегальный лесоруб срубил дерево</div>
+            </div>
+            
+            <!-- Новые мобильные кнопки -->
+            <div class="mobile-shop-buttons" id="mobileShopButtons">
+                <button class="mobile-shop-button" id="mobilePlantSpeedButton">
+                    <div class="mobile-shop-button-icon">👨‍🌾</div>
+                    <div class="mobile-shop-button-text">Нанять помощника</div>
+                    <div class="mobile-shop-button-price" id="mobilePlantSpeedPrice">10 очков</div>
+                </button>
+                <button class="mobile-shop-button" id="mobileGrowthBoostButton">
+                    <div class="mobile-shop-button-icon">🌿</div>
+                    <div class="mobile-shop-button-text">Купить удобрение</div>
+                    <div class="mobile-shop-button-price" id="mobileGrowthBoostPrice">10 очков</div>
+                </button>
+                <button class="mobile-shop-button" id="mobileSecurityButton">
+                    <div class="mobile-shop-button-icon">🛡️</div>
+                    <div class="mobile-shop-button-text">Нанять охрану</div>
+                    <div class="mobile-shop-button-price" id="mobileSecurityPrice">10 очков</div>
+                </button>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="shop">
+                <h3>Магазин улучшений</h3>
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <div class="shop-item-title"><span>👨‍🌾</span> Нанять<br> помощника</div>
+                        <div class="shop-item-description">Уменьшает время посадки на 1 сек <br> (макс 5)</div>
+                        <div class="upgrade-item">
+                            <span>Помощники:</span>
+                            <span id="plantSpeedBoost">0</span>
+                        </div>
+                    </div>
+                    <button class="shop-item-button" id="buyPlantSpeedButton">10 очков</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <div class="shop-item-title"><span>🌿</span> Купить<br>удобрение</div>
+                        <div class="shop-item-description">Уменьшает время роста на 1 сек <br> (макс 15)</div>
+                        <div class="upgrade-item">
+                            <span>Удобрения:</span>
+                            <span id="growthBoost">0</span>
+                        </div>
+                    </div>
+                    <button class="shop-item-button" id="buyGrowthBoostButton">10 очков</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <div class="shop-item-title"><span>🛡️</span> Нанять<br>охрану</div>
+                        <div class="shop-item-description">Охрана ловит нелегальных <br> лесорубов рядом <br> (макс 12)</div>
+                        <div class="upgrade-item">
+                            <span>Охрана:</span>
+                            <span id="securityCount">0/12</span>
+                        </div>
+                    </div>
+                    <button class="shop-item-button" id="buySecurityButton" data-price="10">10 очков</button>
+                </div>
+                <div class="shop-item" style="background-color: rgba(255, 255, 255, 0.5); font-size: 11px; color: #666; text-align: center; padding: 6px;">
+                    <div><p class="hotkeys"><b>Горячие клавиши:</b> 1 - Нанять помощника, 2 - Купить удобрение, 3 - Нанять охрану</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="level-up-alert" id="levelUpAlert">Новый уровень!</div>
+    
+    <div class="victory-message" id="victoryMessage">
+        <h2>Поздравляем!</h2>
+        <p id="victoryMessageText">Ты прошел все 12 уровней и посадил прекрасный лес</p>
+        <p>Твой итоговый счет: <span id="finalScore">0</span> очков</p>
+        <div id="victoryHighScore" class="high-score-display">Рекорд состояния леса: 0%</div>
+        <p>Посажено деревьев: <span id="finalTreesPlanted">0</span></p>
+        <p>Срублено деревьев: <span id="finalTreesChopped">0</span></p>
+        <p>Поймано нелегальных лесорубов: <span id="finalLumberjacksCaught">0</span></p>
+        <button id="playAgainButton" style="min-height: 44px;">Играть снова</button>
+    </div>
+    
+    <div class="game-over-message" id="gameOverMessage">
+        <h2>Игра окончена</h2>
+        <p>Все твои деревья были срублены нелегальными лесорубами.</p>
+        <div id="gameOverHighScore" class="high-score-display">Рекорд состояния леса: 0%</div>
+        <button id="restartButton" style="min-height: 44px;">Начать заново</button>
+    </div>
+
+    <audio id="backgroundMusic" loop preload="auto" style="display: none;">
+        <source src="put_k_schastyu.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="plantTreeSound" preload="auto" style="display: none;"></audio>
+    <audio id="waterCollectSound" preload="auto" style="display: none;"></audio>
+    <audio id="waterTreeSound" preload="auto" style="display: none;"></audio>
+    <audio id="treeGrowSound" preload="auto" style="display: none;"></audio>
+    <audio id="upgradeSound" preload="auto" style="display: none;"></audio>
+    <audio id="securitySound" preload="auto" style="display: none;"></audio>
+    <audio id="catchLumberjackSound" preload="auto" style="display: none;"></audio>
+    <audio id="levelUpSound" preload="auto" style="display: none;"></audio>
+    <audio id="gameEndSound" preload="auto" style="display: none;"></audio>
+    <audio id="victorySound" preload="auto" style="display: none;"></audio>
+    <audio id="clickSound" preload="auto" style="display: none;"></audio>
+    <audio id="securityPlaceSound" preload="auto" style="display: none;"></audio>
+    <audio id="externalChopSound" preload="auto" style="display: none;">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-wood-hard-hit-2187.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация аудио контекста для мобильных устройств
+            let audioContextInitialized = false;
+            let audioContext = null;
+            
+            function initAudioContext() {
+                if (audioContextInitialized) return;
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    audioContextInitialized = true;
+                } catch(e) {
+                    console.log("AudioContext not supported");
+                }
+            }
+            
+            // Рекорд игры (основанный на проценте зелёной прогресс-бары)
+            let progressRecord = 0;
+            let maxProgressInSession = 0; // Максимальный процент в текущей сессии
+            
+            // Загружаем рекорд из localStorage
+            try {
+                progressRecord = parseInt(localStorage.getItem('plantForestProgressRecord')) || 0;
+            } catch(e) {
+                progressRecord = 0;
+            }
+            
+            // Функция для обновления рекорда
+            function updateProgressRecord(newProgress) {
+                if (newProgress > progressRecord) {
+                    progressRecord = newProgress;
+                    try {
+                        localStorage.setItem('plantForestProgressRecord', progressRecord.toString());
+                    } catch(e) {}
+                }
+            }
+            
+            // Функция для отображения рекорда
+            function displayProgressRecord() {
+                // На стартовом экране
+                const startScreenHighScore = document.getElementById('startScreenHighScore');
+                if (startScreenHighScore) {
+                    startScreenHighScore.textContent = `Рекорд состояния леса: ${progressRecord}%`;
+                }
+                
+                // В окне победы
+                const victoryHighScore = document.getElementById('victoryHighScore');
+                if (victoryHighScore) {
+                    victoryHighScore.textContent = `Рекорд состояния леса: ${progressRecord}%`;
+                }
+                
+                // В окне поражения
+                const gameOverHighScore = document.getElementById('gameOverHighScore');
+                if (gameOverHighScore) {
+                    gameOverHighScore.textContent = `Рекорд состояния леса: ${progressRecord}%`;
+                }
+            }
+            
+            // Инициализируем аудио контекст при первом клике
+            function handleFirstInteraction() {
+                initAudioContext();
+            }
+            
+            document.addEventListener('click', handleFirstInteraction, { once: true });
+            document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+            
+            const mainHeader = document.getElementById('main-header');
+            const mobilePauseButton = document.getElementById('mobilePauseButton');
+            const mobileResetButton = document.getElementById('mobileResetButton');
+            const mobileFullscreenButton = document.getElementById('mobileFullscreenButton');
+            const plantSpeedAlert = document.getElementById('plantSpeedAlert');
+            const growthBoostAlert = document.getElementById('growthBoostAlert');
+            const firstLumberjackAlert = document.getElementById('firstLumberjackAlert');
+            const gameInfo = document.getElementById('gameInfo');
+            const levelProgress = document.getElementById('levelProgress');
+            const progressBarContainer = document.getElementById('progressBarContainer');
+            
+            document.querySelectorAll('button, .river, .tree-hitbox, .lumberjack-hitbox').forEach(el => {
+                el.style.touchAction = 'manipulation';
+            });
+            
+            const musicToggle = document.getElementById('musicToggle');
+            const soundToggle = document.getElementById('soundToggle');
+            const backgroundMusic = document.getElementById('backgroundMusic');
+            const plantTreeSound = document.getElementById('plantTreeSound');
+            const waterCollectSound = document.getElementById('waterCollectSound');
+            const waterTreeSound = document.getElementById('waterTreeSound');
+            const treeGrowSound = document.getElementById('treeGrowSound');
+            const externalChopSound = document.getElementById('externalChopSound');
+            const upgradeSound = document.getElementById('upgradeSound');
+            const securitySound = document.getElementById('securitySound');
+            const catchLumberjackSound = document.getElementById('catchLumberjackSound');
+            const levelUpSound = document.getElementById('levelUpSound');
+            const gameEndSound = document.getElementById('gameEndSound');
+            const victorySound = document.getElementById('victorySound');
+            const clickSound = document.getElementById('clickSound');
+            const securityPlaceSound = document.getElementById('securityPlaceSound');
+            
+            const gameField = document.getElementById('gameField');
+            const treeCountElement = document.getElementById('treeCount');
+            const choppedCountElement = document.getElementById('choppedCount');
+            const scoreCountElement = document.getElementById('scoreCount');
+            const levelElement = document.getElementById('level');
+            const startButton = document.getElementById('startButton');
+            const pauseButton = document.getElementById('pauseButton');
+            const resetButton = document.getElementById('resetButton');
+            const startScreenButton = document.getElementById('startScreenButton');
+            const levelUpAlert = document.getElementById('levelUpAlert');
+            const placeSecurityAlert = document.getElementById('placeSecurityAlert');
+            const lumberjackTimerElement = document.getElementById('lumberjackTimer');
+            const progressBar = document.getElementById('progressBar');
+            const levelProgressBar = document.getElementById('levelProgressBar');
+            const victoryMessage = document.getElementById('victoryMessage');
+            const finalScoreElement = document.getElementById('finalScore');
+            const gameOverMessage = document.getElementById('gameOverMessage');
+            const gameOverScoreElement = document.getElementById('gameOverScore');
+            const plantTimerElement = document.getElementById('plantTimer');
+            const bucketIndicator = document.getElementById('bucketIndicator');
+            const river = document.getElementById('river');
+            const startTimer = document.getElementById('startTimer');
+            const pausedOverlay = document.getElementById('pausedOverlay');
+            const startScreen = document.getElementById('startScreen');
+            const buyPlantSpeedButton = document.getElementById('buyPlantSpeedButton');
+            const buyGrowthBoostButton = document.getElementById('buyGrowthBoostButton');
+            const buySecurityButton = document.getElementById('buySecurityButton');
+            const plantSpeedBoostElement = document.getElementById('plantSpeedBoost');
+            const growthBoostElement = document.getElementById('growthBoost');
+            const securityCountElement = document.getElementById('securityCount');
+            const waterInstructionAlert = document.getElementById('waterInstructionAlert');
+            const waterFirstAlert = document.getElementById('waterFirstAlert');
+            const waterSuccessAlert = document.getElementById('waterSuccessAlert');
+            const choppedAlert = document.getElementById('choppedAlert');
+            const victoryMessageText = document.getElementById('victoryMessageText');
+            const finalTreesPlanted = document.getElementById('finalTreesPlanted');
+            const finalTreesChopped = document.getElementById('finalTreesChopped');
+            const finalLumberjacksCaught = document.getElementById('finalLumberjacksCaught');
+            const playAgainButton = document.getElementById('playAgainButton');
+            const restartButton = document.getElementById('restartButton');
+            
+            // Новые элементы для мобильных кнопок
+            const mobileShopButtons = document.getElementById('mobileShopButtons');
+            const mobilePlantSpeedButton = document.getElementById('mobilePlantSpeedButton');
+            const mobileGrowthBoostButton = document.getElementById('mobileGrowthBoostButton');
+            const mobileSecurityButton = document.getElementById('mobileSecurityButton');
+            const mobilePlantSpeedPrice = document.getElementById('mobilePlantSpeedPrice');
+            const mobileGrowthBoostPrice = document.getElementById('mobileGrowthBoostPrice');
+            const mobileSecurityPrice = document.getElementById('mobileSecurityPrice');
+            
+            let musicEnabled = true;
+            let soundsEnabled = true;
+            
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            let treeCount = 0;
+            let choppedCount = 0;
+            let score = 0;
+            let trees = [];
+            let lumberjacks = [];
+            let securityGuards = [];
+            let gameInterval;
+            let lumberjackInterval;
+            let plantTimerInterval;
+            let startTimerInterval;
+            let securityInterval;
+            let lumberjackTimerInterval;
+            let gameStarted = false;
+            let gamePaused = false;
+            let level = 1;
+            let treesPlantedThisLevel = 0;
+            let treesGrownThisLevel = 0;
+            let lumberjacksCaughtThisLevel = 0;
+            let canPlant = false;
+            let plantCooldown = 0;
+            let hasWater = false;
+            let startCountdown = 10;
+            let lumberjackTimer = 20;
+            const TREES_PER_LEVEL = 10;
+            const MAX_LEVEL = 12;
+            let placingSecurity = false;
+            let isFirstLevel = true;
+            
+            let plantSpeedBoostPrice = 10;
+            let growthBoostPrice = 10;
+            
+            let plantSpeedBoost = 0;
+            const MAX_PLANT_SPEED = 5;
+            let growthBoost = 0;
+            const MAX_GROWTH_BOOST = 15;
+            let securityCount = 0;
+            const MAX_SECURITY = 12;
+            let availableSecurity = 0;
+            
+            // Переменная для блокировки повторного найма охраны
+            let lastSecurityPurchaseTime = 0;
+            const SECURITY_PURCHASE_COOLDOWN = 2000; // 2 секунды между покупками
+            
+            let caughtLumberjacksThisLevel = 0;
+            let hasShownSecurityInstruction = false;
+            let hasShownWaterInstruction = false;
+            let hasShownWaterFirstAlert = false;
+            let hasShownWaterSuccessAlert = false;
+            
+            // Новая переменная для уведомления о первой поимке лесоруба
+            let hasShownFirstLumberjackAlert = false;
+            
+            let scoreFromPreviousLevel = 0;
+            let scoreInCurrentLevel = 0;
+            
+            let totalTreesPlanted = 0;
+            let totalTreesChopped = 0;
+            let totalLumberjacksCaught = 0;
+            
+            // Функция для проверки возможности посадки дерева в позиции (УПРОЩЕНО для мобильных устройств)
+            function canPlantAtPosition(x, y) {
+                const riverRect = river.getBoundingClientRect();
+                const fieldRect = gameField.getBoundingClientRect();
+                const relativeRiverTop = riverRect.top - fieldRect.top;
+                
+                // Деревья можно сажать вплотную до реки (минимальное расстояние 3px)
+                if (y > relativeRiverTop - 3) {
+                    return false;
+                }
+                
+                // На мобильных устройствах разрешаем сажать деревья ближе
+                if (isMobile) {
+                    // Проверяем только очень близкие деревья (5px)
+                    for (const tree of trees) {
+                        const dx = Math.abs(tree.x - x);
+                        const dy = Math.abs(tree.y - y);
+                        if (dx < 5 && dy < 5) {
+                            return false;
+                        }
+                    }
+                } else {
+                    // Для десктопов оставляем старую проверку (10px)
+                    for (const tree of trees) {
+                        const dx = Math.abs(tree.x - x);
+                        const dy = Math.abs(tree.y - y);
+                        if (dx < 10 && dy < 10) {
+                            return false;
+                        }
+                    }
+                }
+                
+                return true;
+            }
+            
+            // Функция для проверки возможности размещения охраны в позиции (УПРОЩЕНО для мобильных устройств)
+            function canPlaceSecurityAtPosition(x, y) {
+                const riverRect = river.getBoundingClientRect();
+                const fieldRect = gameField.getBoundingClientRect();
+                const relativeRiverTop = riverRect.top - fieldRect.top;
+                
+                // Охрану можно ставить очень близко к реке
+                if (y > relativeRiverTop - 3) {
+                    return false;
+                }
+                
+                // Проверяем только очень близкую охрану (15px)
+                for (const guard of securityGuards) {
+                    const dx = Math.abs(guard.x - x);
+                    const dy = Math.abs(guard.y - y);
+                    if (dx < 15 && dy < 15) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            // Функция для показа уведомления о первой поимке лесоруба
+            function showFirstLumberjackCaughtAlert() {
+                if (hasShownFirstLumberjackAlert) return;
+                
+                firstLumberjackAlert.style.display = 'block';
+                hasShownFirstLumberjackAlert = true;
+                
+                setTimeout(() => {
+                    firstLumberjackAlert.style.display = 'none';
+                }, 3000);
+            }
+            
+            function setupLumberjackHoverEffects() {
+                if (!isMobile) {
+                    gameField.addEventListener('mousemove', function(event) {
+                        if (gamePaused || !gameStarted) return;
+                        
+                        const rect = gameField.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+                        
+                        let foundLumberjack = null;
+                        
+                        for (const lumberjack of lumberjacks) {
+                            if (!lumberjack.active || lumberjack.isRunningAway) continue;
+                            
+                            const lumberjackRect = lumberjack.element.getBoundingClientRect();
+                            const relativeLeft = lumberjackRect.left - rect.left;
+                            const relativeTop = lumberjackRect.top - rect.top;
+                            const relativeRight = relativeLeft + lumberjackRect.width;
+                            const relativeBottom = relativeTop + lumberjackRect.height;
+                            
+                            if (x >= relativeLeft && x <= relativeRight && 
+                                y >= relativeTop && y <= relativeBottom) {
+                                foundLumberjack = lumberjack;
+                                break;
+                            }
+                        }
+                        
+                        lumberjacks.forEach(lumberjack => {
+                            if (lumberjack === foundLumberjack && !lumberjack.fingerElement) {
+                                showFinger(lumberjack);
+                            } else if (lumberjack !== foundLumberjack && lumberjack.fingerElement) {
+                                hideFinger(lumberjack);
+                            }
+                        });
+                    });
+                    
+                    gameField.addEventListener('mouseleave', function() {
+                        lumberjacks.forEach(lumberjack => {
+                            if (lumberjack.fingerElement) {
+                                hideFinger(lumberjack);
+                            }
+                        });
+                    });
+                }
+            }
+            
+            function updateCursor() {
+                gameField.classList.remove('cursor-green', 'cursor-yellow', 'cursor-red', 'cursor-red-not-allowed');
+                
+                if (gamePaused || !gameStarted) {
+                    gameField.classList.add('cursor-red-not-allowed');
+                    return;
+                }
+                
+                if (placingSecurity) {
+                    gameField.classList.add('cursor-yellow');
+                } else if (canPlant) {
+                    gameField.classList.add('cursor-green');
+                } else {
+                    gameField.classList.add('cursor-red-not-allowed');
+                }
+            }
+            
+            function showUpgradeAlert(alertElement, message) {
+                alertElement.textContent = message;
+                alertElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    alertElement.style.display = 'none';
+                }, 3000);
+            }
+            
+            function setupMobilePauseButton() {
+                mobilePauseButton.style.display = 'none';
+                
+                let lastTap = 0;
+                
+                mobilePauseButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const now = Date.now();
+                    if (now - lastTap < 300) return;
+                    lastTap = now;
+                    togglePause();
+                });
+                
+                mobilePauseButton.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, { passive: false });
+                
+                mobilePauseButton.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const now = Date.now();
+                    if (now - lastTap < 300) return;
+                    lastTap = now;
+                    togglePause();
+                }, { passive: false });
+            }
+            
+            function setupMobileResetButton() {
+                mobileResetButton.style.display = 'none';
+                
+                let lastTap = 0;
+                
+                mobileResetButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const now = Date.now();
+                    if (now - lastTap < 300) return;
+                    lastTap = now;
+                    
+                    handleResetGame(e);
+                });
+                
+                mobileResetButton.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, { passive: false });
+                
+                mobileResetButton.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const now = Date.now();
+                    if (now - lastTap < 300) return;
+                    lastTap = now;
+                    
+                    handleResetGame(e);
+                }, { passive: false });
+            }
+            
+            // Функция для скрытия всех пальцев
+            function hideAllFingers() {
+                lumberjacks.forEach(lumberjack => {
+                    if (lumberjack.fingerElement) {
+                        hideFinger(lumberjack);
+                    }
+                });
+            }
+            
+            // Функция для добавления анимации нажатия к кнопкам
+            function addButtonClickAnimation(button) {
+                button.addEventListener('touchstart', function() {
+                    if (!this.disabled) {
+                        this.classList.add('mobile-button-click');
+                    }
+                });
+                
+                button.addEventListener('touchend', function() {
+                    this.classList.remove('mobile-button-click');
+                });
+                
+                button.addEventListener('touchcancel', function() {
+                    this.classList.remove('mobile-button-click');
+                });
+            }
+            
+            function buyPlantSpeed() {
+                if (score < plantSpeedBoostPrice || plantSpeedBoost >= MAX_PLANT_SPEED) return;
+                
+                playSound('upgradeSound', 0.5);
+                
+                score -= plantSpeedBoostPrice;
+                scoreCountElement.textContent = Math.round(score * 10) / 10;
+                plantSpeedBoost++;
+                plantSpeedBoostElement.textContent = plantSpeedBoost;
+                
+                plantSpeedBoostPrice += 5;
+                
+                const newCooldown = getPlantCooldown();
+                showUpgradeAlert(plantSpeedAlert, `Деревья садятся теперь быстрее! Теперь задержка: ${newCooldown} сек`);
+                
+                updateShopButtons();
+            }
+            
+            function buyGrowthBoost() {
+                if (score < growthBoostPrice || growthBoost >= MAX_GROWTH_BOOST) return;
+                
+                playSound('upgradeSound', 0.5);
+                
+                score -= growthBoostPrice;
+                scoreCountElement.textContent = Math.round(score * 10) / 10;
+                growthBoost++;
+                growthBoostElement.textContent = growthBoost;
+                
+                growthBoostPrice += 5;
+                
+                const newGrowthTime = getGrowthTime() / 1000;
+                showUpgradeAlert(growthBoostAlert, `Деревья растут теперь быстрее! Теперь время роста: ${newGrowthTime} сек`);
+                
+                trees.forEach(tree => {
+                    if (!tree.grown) {
+                        clearTimeout(tree.growthTimer);
+                        
+                        const elapsed = Date.now() - tree.growthStartTime;
+                        const newGrowthTimeMs = getGrowthTime();
+                        const newRemaining = Math.max(1000, newGrowthTimeMs - elapsed);
+                        
+                        tree.growthTime = newGrowthTimeMs;
+                        tree.remainingGrowthTime = newRemaining;
+                        
+                        tree.progressBar.style.transition = 'none';
+                        const currentProgress = (elapsed / (newGrowthTimeMs + growthBoost * 1000)) * 100;
+                        tree.progressBar.style.width = `${currentProgress}%`;
+                        
+                        setTimeout(() => {
+                            tree.progressBar.style.transition = `width ${newRemaining}ms linear`;
+                            tree.progressBar.style.width = '100%';
+                        }, 10);
+                        
+                        tree.growthTimer = setTimeout(() => {
+                            finishTreeGrowth(tree);
+                        }, newRemaining);
+                    }
+                });
+                
+                updateShopButtons();
+            }
+            
+            function setupGameFieldClickHandler() {
+                if (!isMobile) {
+                    gameField.addEventListener('click', function(event) {
+                        if (gamePaused || !gameStarted) return;
+                        
+                        const rect = gameField.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+                        
+                        const riverRect = river.getBoundingClientRect();
+                        if (event.clientX >= riverRect.left && event.clientX <= riverRect.right &&
+                            event.clientY >= riverRect.top && event.clientY <= riverRect.bottom) {
+                            fillBucket();
+                            return;
+                        }
+                        
+                        if (placingSecurity) {
+                            if (canPlaceSecurityAtPosition(x, y)) {
+                                placeSecurity(x, y);
+                            }
+                        } else if (canPlant) {
+                            if (canPlantAtPosition(x, y)) {
+                                plantTree(x, y);
+                            }
+                        }
+                    });
+                }
+            }
+            
+            function setupMobileTouchHandlers() {
+                if (!isMobile) return;
+                
+                let touchStartTime = 0;
+                let touchStartX = 0;
+                let touchStartY = 0;
+                
+                gameField.addEventListener('touchstart', function(event) {
+                    if (gamePaused || !gameStarted) return;
+                    
+                    event.preventDefault();
+                    const touch = event.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    touchStartTime = Date.now();
+                    
+                    initAudioContext();
+                }, { passive: false });
+                
+                gameField.addEventListener('touchend', function(event) {
+                    if (gamePaused || !gameStarted) return;
+                    
+                    event.preventDefault();
+                    const touchEndTime = Date.now();
+                    const touchDuration = touchEndTime - touchStartTime;
+                    
+                    if (touchDuration < 300) {
+                        const rect = gameField.getBoundingClientRect();
+                        const touch = event.changedTouches[0];
+                        const x = touch.clientX - rect.left;
+                        const y = touch.clientY - rect.top;
+                        
+                        const riverRect = river.getBoundingClientRect();
+                        if (touch.clientX >= riverRect.left && touch.clientX <= riverRect.right &&
+                            touch.clientY >= riverRect.top && touch.clientY <= riverRect.bottom) {
+                            fillBucket();
+                            return;
+                        }
+                        
+                        if (placingSecurity) {
+                            if (canPlaceSecurityAtPosition(x, y)) {
+                                placeSecurity(x, y);
+                            }
+                        } else if (canPlant) {
+                            if (canPlantAtPosition(x, y)) {
+                                plantTree(x, y);
+                            }
+                        }
+                    }
+                }, { passive: false });
+            }
+            
+            function handleStartGame(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                initAudioContext();
+                playSound('clickSound', 0.2);
+                
+                startGame();
+                
+                if (isMobile) {
+                    mainHeader.style.display = 'none';
+                    mobilePauseButton.style.display = 'flex';
+                    mobileResetButton.style.display = 'flex';
+                    mobileFullscreenButton.style.display = 'flex';
+                }
+            }
+            
+            function handlePauseGame(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                togglePause();
+            }
+            
+            function handleResetGame(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                if (!confirm("Вы уверены, что хотите сбросить игру? Весь прогресс будет потерян.")) {
+                    return;
+                }
+                
+                playSound('clickSound', 0.2);
+                
+                clearIntervals();
+                clearTreeTimers();
+                clearLumberjackAnimations();
+                hideAllFingers();
+                
+                try {
+                    backgroundMusic.pause();
+                    backgroundMusic.currentTime = 0;
+                    externalChopSound.pause();
+                    externalChopSound.currentTime = 0;
+                } catch(e) {}
+                
+                gameStarted = false;
+                gamePaused = false;
+                treeCount = 0;
+                choppedCount = 0;
+                score = 0;
+                trees = [];
+                lumberjacks = [];
+                securityGuards = [];
+                level = 1;
+                treesPlantedThisLevel = 0;
+                treesGrownThisLevel = 0;
+                lumberjacksCaughtThisLevel = 0;
+                canPlant = false;
+                plantCooldown = 0;
+                hasWater = false;
+                startCountdown = 10;
+                lumberjackTimer = 20;
+                placingSecurity = false;
+                isFirstLevel = true;
+                
+                plantSpeedBoostPrice = 10;
+                growthBoostPrice = 10;
+                plantSpeedBoost = 0;
+                growthBoost = 0;
+                securityCount = 0;
+                availableSecurity = 0;
+                lastSecurityPurchaseTime = 0;
+                
+                caughtLumberjacksThisLevel = 0;
+                hasShownSecurityInstruction = false;
+                hasShownWaterInstruction = false;
+                hasShownWaterFirstAlert = false;
+                hasShownWaterSuccessAlert = false;
+                
+                hasShownFirstLumberjackAlert = false;
+                
+                scoreFromPreviousLevel = 0;
+                scoreInCurrentLevel = 0;
+                totalTreesPlanted = 0;
+                totalTreesChopped = 0;
+                totalLumberjacksCaught = 0;
+                
+                maxProgressInSession = 0;
+                
+                treeCountElement.textContent = '0';
+                choppedCountElement.textContent = '0';
+                scoreCountElement.textContent = '0';
+                levelElement.textContent = '1';
+                plantSpeedBoostElement.textContent = '0';
+                growthBoostElement.textContent = '0';
+                securityCountElement.textContent = '0/12';
+                startButton.textContent = 'Начать игру';
+                pauseButton.textContent = 'Пауза';
+                
+                mobilePauseButton.textContent = '⏸';
+                
+                if (isMobile && mobileShopButtons) {
+                    mobileShopButtons.style.display = 'none';
+                }
+                
+                if (!isMobile) {
+                    if (gameInfo) gameInfo.style.display = 'flex';
+                    if (levelProgress) levelProgress.style.display = 'block';
+                    if (progressBarContainer) progressBarContainer.style.display = 'block';
+                }
+                
+                displayProgressRecord();
+                
+                const fieldElements = gameField.querySelectorAll('.tree-container, .lumberjack, .security-guard, .security-range, .finger-icon, .score-alert, .water-animation, .water-effect, .empty-bucket-alert, .already-watered-alert, .security-catch');
+                fieldElements.forEach(el => {
+                    if (el.parentNode) {
+                        el.parentNode.removeChild(el);
+                    }
+                });
+                
+                startScreen.style.display = 'flex';
+                pausedOverlay.style.display = 'none';
+                victoryMessage.style.display = 'none';
+                gameOverMessage.style.display = 'none';
+                
+                if (isMobile) {
+                    mobilePauseButton.style.display = 'none';
+                    mobileResetButton.style.display = 'none';
+                    mobileFullscreenButton.style.display = 'none';
+                }
+                
+                updateShopButtons();
+                updateProgressBar();
+                updateLevelProgress();
+                updateCursor();
+            }
+            
+            function handleRiverClick(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (gamePaused) return;
+                fillBucket();
+            }
+            
+            function handleBuyPlantSpeed(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                buyPlantSpeed();
+            }
+            
+            function handleBuyGrowthBoost(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                buyGrowthBoost();
+            }
+            
+            function handleBuySecurity(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                buySecurity();
+            }
+            
+            function getSecurityPrice(level) {
+                if (level >= 1 && level <= 3) return 10;
+                if (level >= 4 && level <= 5) return 12;
+                if (level >= 6 && level <= 9) return 15;
+                if (level >= 10 && level <= 12) return 20;
+                return 10;
+            }
+            
+            function getSecurityDamage(level) {
+                if (level >= 1 && level <= 3) return 1;
+                if (level >= 4 && level <= 5) return 2;
+                if (level >= 6 && level <= 9) return 3;
+                if (level >= 10 && level <= 12) return 4;
+                return 1;
+            }
+            
+            const treeTypesByLevel = {
+                1: '🌲', 2: '🌲', 3: '🌲',
+                4: '🌳', 5: '🌳', 6: '🌳',
+                7: '🌴', 8: '🌴', 9: '🌴',
+                10: '🎄', 11: '🎄', 12: '🎄'
+            };
+            
+            const treeHealthByLevel = {
+                1: 1, 2: 1, 3: 1,
+                4: 2, 5: 2, 6: 2,
+                7: 3, 8: 3, 9: 3,
+                10: 4, 11: 4, 12: 4
+            };
+            
+            const lumberjackFaces = ['👨‍🦰', '👨🏽', '👨🏿', '🧔'];
+            
+            const lumberjackArmorByLevel = {
+                1: 1, 2: 1, 3: 1,
+                4: 2, 5: 2, 6: 2,
+                7: 3, 8: 3, 9: 3,
+                10: 4, 11: 4, 12: 4
+            };
+            
+            const basePlantCooldownsByLevel = {
+                1: 7, 2: 7, 3: 7,
+                4: 7, 5: 7, 6: 7,
+                7: 7, 8: 7, 9: 7,
+                10: 7, 11: 7, 12: 7
+            };
+            
+            function createTerrain() {
+                const fieldWidth = gameField.offsetWidth;
+                const fieldHeight = gameField.offsetHeight;
+                
+                const bushCount = isMobile ? 15 : 20;
+                for (let i = 0; i < bushCount; i++) {
+                    const bushElement = document.createElement('div');
+                    bushElement.className = 'bush';
+                    bushElement.textContent = '🌿';
+                    
+                    const x = Math.random() * (fieldWidth - (isMobile ? 25 : 30));
+                    const y = Math.random() * (fieldHeight - (isMobile ? 25 : 30));
+                    
+                    bushElement.style.left = `${x}px`;
+                    bushElement.style.top = `${y}px`;
+                    gameField.appendChild(bushElement);
+                }
+                
+                const flowerCount = isMobile ? 20 : 25;
+                const flowerTypes = ['🌸', '🌼', '🌺', '🌷', '🌻'];
+                for (let i = 0; i < flowerCount; i++) {
+                    const flowerElement = document.createElement('div');
+                    flowerElement.className = 'flower';
+                    flowerElement.textContent = flowerTypes[Math.floor(Math.random() * flowerTypes.length)];
+                    
+                    const x = Math.random() * (fieldWidth - (isMobile ? 18 : 20));
+                    const y = Math.random() * (fieldHeight - (isMobile ? 18 : 20));
+                    
+                    flowerElement.style.left = `${x}px`;
+                    flowerElement.style.top = `${y}px`;
+                    gameField.appendChild(flowerElement);
+                }
+                
+                const grassCount = isMobile ? 15 : 18;
+                for (let i = 0; i < grassCount; i++) {
+                    const grassElement = document.createElement('div');
+                    grassElement.className = 'grass';
+                    grassElement.textContent = '🌱';
+                    
+                    const x = Math.random() * (fieldWidth - (isMobile ? 22 : 25));
+                    const y = Math.random() * (fieldHeight - (isMobile ? 22 : 25));
+                    
+                    grassElement.style.left = `${x}px`;
+                    grassElement.style.top = `${y}px`;
+                    gameField.appendChild(grassElement);
+                }
+            }
+            
+            createTerrain();
+            
+            function getCurrentTreeType() {
+                return treeTypesByLevel[level] || '🌲';
+            }
+            
+            function getTreeHealth() {
+                return treeHealthByLevel[level] || 1;
+            }
+            
+            function getLumberjackArmor() {
+                return lumberjackArmorByLevel[level] || 1;
+            }
+            
+            function getPlantCooldown() {
+                const baseCooldown = basePlantCooldownsByLevel[level] || 7;
+                return Math.max(1, baseCooldown - plantSpeedBoost);
+            }
+            
+            function getGrowthTime() {
+                return Math.max(1000, 16000 - growthBoost * 1000);
+            }
+            
+            function showLevelUpAlert() {
+                levelUpAlert.style.display = 'block';
+                
+                let levelBonus = 0;
+                if (level >= 1 && level <= 3) {
+                    levelBonus = 20;
+                } else if (level >= 4 && level <= 6) {
+                    levelBonus = 30;
+                } else if (level >= 7 && level <= 9) {
+                    levelBonus = 50;
+                } else if (level >= 10 && level <= 12) {
+                    levelBonus = 70;
+                }
+                
+                levelUpAlert.innerHTML = `Уровень ${level}!<br>+${levelBonus} очков`;
+                
+                setTimeout(() => {
+                    levelUpAlert.style.display = 'none';
+                }, 3000);
+            }
+            
+            function showPlaceSecurityAlert() {
+                placeSecurityAlert.style.display = 'block';
+                
+                setTimeout(() => {
+                    placeSecurityAlert.style.display = 'none';
+                }, 3000);
+            }
+            
+            function showWaterInstruction() {
+                if (!hasShownWaterInstruction) {
+                    waterInstructionAlert.style.display = 'block';
+                    hasShownWaterInstruction = true;
+                    
+                    setTimeout(() => {
+                        waterInstructionAlert.style.display = 'none';
+                    }, 5000);
+                }
+            }
+            
+            function showWaterFirstAlert() {
+                if (!hasShownWaterFirstAlert) {
+                    waterFirstAlert.style.display = 'block';
+                    hasShownWaterFirstAlert = true;
+                    
+                    setTimeout(() => {
+                        waterFirstAlert.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            function showWaterSuccessAlert() {
+                waterSuccessAlert.style.display = 'block';
+                
+                setTimeout(() => {
+                    waterSuccessAlert.style.display = 'none';
+                }, 3000);
+            }
+            
+            function showChoppedAlert() {
+                choppedAlert.style.display = 'block';
+                
+                setTimeout(() => {
+                    choppedAlert.style.display = 'none';
+                }, 1500);
+            }
+            
+            function removeAllLumberjacks() {
+                lumberjacks.forEach(lumberjack => {
+                    lumberjack.active = false;
+                    
+                    if (lumberjack.moveAnimation) {
+                        cancelAnimationFrame(lumberjack.moveAnimation);
+                    }
+                    if (lumberjack.attackInterval) {
+                        clearInterval(lumberjack.attackInterval);
+                    }
+                    if (lumberjack.securityDamageInterval) {
+                        clearInterval(lumberjack.securityDamageInterval);
+                    }
+                    
+                    lumberjack.element.style.transform = 'scale(0)';
+                    lumberjack.element.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        if (lumberjack.element && lumberjack.element.parentNode) {
+                            gameField.removeChild(lumberjack.element);
+                        }
+                    }, 300);
+                });
+                
+                lumberjacks = [];
+            }
+            
+            function startLumberjackTimer() {
+                if (isFirstLevel) {
+                    lumberjackTimerElement.style.display = 'none';
+                    return;
+                }
+                
+                lumberjackTimer = 20;
+                lumberjackTimerElement.style.display = 'block';
+                lumberjackTimerElement.textContent = `Нелегальные лесорубы через: ${lumberjackTimer}с`;
+                
+                if (lumberjackInterval) {
+                    clearInterval(lumberjackInterval);
+                    lumberjackInterval = null;
+                }
+                
+                lumberjackTimerInterval = setInterval(() => {
+                    if (gamePaused) return;
+                    
+                    lumberjackTimer--;
+                    lumberjackTimerElement.textContent = `Нелегальные лесорубы через: ${lumberjackTimer}с`;
+                    
+                    if (lumberjackTimer <= 0) {
+                        clearInterval(lumberjackTimerInterval);
+                        lumberjackTimerElement.style.display = 'none';
+                        
+                        const interval = Math.max(500, 3000 - (level - 1) * 227);
+                        lumberjackInterval = setInterval(createLumberjack, interval);
+                    }
+                }, 1000);
+            }
+            
+            function calculateLevelProgress() {
+                let progress = treesGrownThisLevel;
+                
+                const choppedThisLevel = Math.max(0, choppedCount - (level - 1) * TREES_PER_LEVEL);
+                progress = Math.max(0, progress - choppedThisLevel);
+                
+                progress += lumberjacksCaughtThisLevel * 0.25;
+                
+                return Math.min(progress, TREES_PER_LEVEL);
+            }
+            
+            function updateLevelProgress() {
+                const progress = calculateLevelProgress();
+                const progressPercentage = (progress / TREES_PER_LEVEL) * 100;
+                levelProgressBar.style.width = `${progressPercentage}%`;
+            }
+            
+            function plantTree(x, y) {
+                if (!gameStarted || !canPlant || gamePaused || placingSecurity) return;
+                
+                if (!canPlantAtPosition(x, y)) return;
+                
+                playSound('plantTreeSound', 0.5);
+                
+                if (treeCount === 0) {
+                    startTimer.style.display = 'none';
+                    if (startTimerInterval) {
+                        clearInterval(startTimerInterval);
+                    }
+                }
+                
+                const treeContainer = document.createElement('div');
+                treeContainer.className = 'tree-container';
+                treeContainer.style.left = (x - (isMobile ? 20 : 25)) + 'px';
+                treeContainer.style.top = (y - (isMobile ? 40 : 50)) + 'px';
+                
+                const tree = document.createElement('div');
+                tree.className = 'tree growing';
+                tree.textContent = getCurrentTreeType();
+                
+                const treeHitbox = document.createElement('div');
+                treeHitbox.className = 'tree-hitbox';
+                
+                treeHitbox.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (gamePaused) return;
+                    
+                    const treeIndex = Array.from(gameField.querySelectorAll('.tree-container')).indexOf(treeContainer);
+                    const treeObj = trees[treeIndex];
+                    
+                    if (treeObj && hasWater && !treeObj.watered && !treeObj.grown) {
+                        waterTree(treeObj);
+                    } else if (treeObj && !hasWater && !treeObj.grown) {
+                        showEmptyBucketMessage(treeObj.x, treeObj.y);
+                    } else if (treeObj && treeObj.watered && !treeObj.grown) {
+                        showAlreadyWateredMessage(treeObj.x, treeObj.y);
+                    }
+                });
+                
+                treeHitbox.addEventListener('touchend', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (gamePaused) return;
+                    
+                    const treeIndex = Array.from(gameField.querySelectorAll('.tree-container')).indexOf(treeContainer);
+                    const treeObj = trees[treeIndex];
+                    
+                    if (treeObj && hasWater && !treeObj.watered && !treeObj.grown) {
+                        waterTree(treeObj);
+                    } else if (treeObj && !hasWater && !treeObj.grown) {
+                        showEmptyBucketMessage(treeObj.x, treeObj.y);
+                    } else if (treeObj && treeObj.watered && !treeObj.grown) {
+                        showAlreadyWateredMessage(treeObj.x, treeObj.y);
+                    }
+                }, { passive: false });
+                
+                const treeProgress = document.createElement('div');
+                treeProgress.className = 'tree-progress';
+                const treeProgressBar = document.createElement('div');
+                treeProgressBar.className = 'tree-progress-bar';
+                treeProgress.appendChild(treeProgressBar);
+                
+                const treeHealthBar = document.createElement('div');
+                treeHealthBar.className = 'tree-health-bar';
+                const treeHealthFill = document.createElement('div');
+                treeHealthFill.className = 'tree-health-fill';
+                treeHealthBar.appendChild(treeHealthFill);
+                
+                treeContainer.appendChild(tree);
+                treeContainer.appendChild(treeHitbox);
+                treeContainer.appendChild(treeProgress);
+                treeContainer.appendChild(treeHealthBar);
+                
+                gameField.appendChild(treeContainer);
+                
+                const treeObj = {
+                    container: treeContainer,
+                    element: tree,
+                    hitbox: treeHitbox,
+                    progressContainer: treeProgress,
+                    progressBar: treeProgressBar,
+                    healthBar: treeHealthBar,
+                    healthFill: treeHealthFill,
+                    x: x,
+                    y: y,
+                    type: getCurrentTreeType(),
+                    grown: false,
+                    watered: false,
+                    health: getTreeHealth(),
+                    maxHealth: getTreeHealth(),
+                    growthTimer: null,
+                    growthStartTime: Date.now(),
+                    growthTime: getGrowthTime(),
+                    remainingGrowthTime: getGrowthTime(),
+                    progressAnimation: null,
+                    lastDamageTime: 0
+                };
+                
+                trees.push(treeObj);
+                
+                treeCount++;
+                treeCountElement.textContent = treeCount;
+                totalTreesPlanted++;
+                
+                treesPlantedThisLevel++;
+                
+                updateProgressBar();
+                
+                startTreeGrowth(treeObj);
+                
+                startPlantCooldown();
+                
+                if (isFirstLevel && treeCount === 1) {
+                    const initialInterval = 3000;
+                    lumberjackInterval = setInterval(createLumberjack, initialInterval);
+                }
+                
+                if (treeCount === 1 && !hasShownWaterInstruction) {
+                    showWaterInstruction();
+                }
+                
+                checkLevelUp();
+            }
+            
+            function showEmptyBucketMessage(x, y) {
+                const emptyBucketAlert = document.createElement('div');
+                emptyBucketAlert.className = 'empty-bucket-alert';
+                emptyBucketAlert.textContent = 'Пустое ведро - сходи к речке';
+                emptyBucketAlert.style.left = (x - (isMobile ? 60 : 80)) + 'px';
+                emptyBucketAlert.style.top = (y - (isMobile ? 25 : 30)) + 'px';
+                
+                gameField.appendChild(emptyBucketAlert);
+                
+                setTimeout(() => {
+                    if (emptyBucketAlert.parentNode) {
+                        gameField.removeChild(emptyBucketAlert);
+                    }
+                }, 2000);
+            }
+            
+            function showAlreadyWateredMessage(x, y) {
+                const alreadyWateredAlert = document.createElement('div');
+                alreadyWateredAlert.className = 'already-watered-alert';
+                alreadyWateredAlert.textContent = 'Дерево уже полито!';
+                alreadyWateredAlert.style.left = (x - (isMobile ? 50 : 60)) + 'px';
+                alreadyWateredAlert.style.top = (y - (isMobile ? 25 : 30)) + 'px';
+                
+                gameField.appendChild(alreadyWateredAlert);
+                
+                setTimeout(() => {
+                    if (alreadyWateredAlert.parentNode) {
+                        gameField.removeChild(alreadyWateredAlert);
+                    }
+                }, 2000);
+            }
+            
+            function startTreeGrowth(treeObj) {
+                if (gamePaused) return;
+                
+                treeObj.progressBar.style.width = '0%';
+                setTimeout(() => {
+                    treeObj.progressBar.style.transition = `width ${treeObj.remainingGrowthTime}ms linear`;
+                    treeObj.progressBar.style.width = '100%';
+                }, 10);
+                
+                treeObj.growthTimer = setTimeout(() => {
+                    finishTreeGrowth(treeObj);
+                }, treeObj.remainingGrowthTime);
+            }
+            
+            function finishTreeGrowth(treeObj) {
+                playSound('treeGrowSound', 0.4);
+                
+                treeObj.element.classList.remove('growing');
+                treeObj.element.classList.add('grown');
+                treeObj.grown = true;
+                
+                treesGrownThisLevel++;
+                updateLevelProgress();
+                
+                addScore(4, treeObj.x, treeObj.y);
+                
+                treeObj.healthBar.style.display = 'block';
+                updateTreeHealthBar(treeObj);
+                
+                if (treeObj.progressContainer) {
+                    treeObj.progressContainer.style.opacity = '0';
+                    setTimeout(() => {
+                        if (treeObj.progressContainer.parentNode) {
+                            treeObj.progressContainer.parentNode.removeChild(treeObj.progressContainer);
+                        }
+                    }, 500);
+                }
+                
+                const puddle = treeObj.container.querySelector('.water-puddle');
+                if (puddle) {
+                    puddle.style.opacity = '0';
+                    setTimeout(() => {
+                        if (puddle.parentNode) {
+                            puddle.parentNode.removeChild(puddle);
+                        }
+                    }, 500);
+                }
+                
+                checkLevelUp();
+            }
+            
+            function updateTreeHealthBar(treeObj) {
+                const healthPercentage = (treeObj.health / treeObj.maxHealth) * 100;
+                treeObj.healthFill.style.width = `${healthPercentage}%`;
+                
+                if (healthPercentage > 70) {
+                    treeObj.healthFill.style.backgroundColor = '#4CAF50';
+                } else if (healthPercentage > 30) {
+                    treeObj.healthFill.style.backgroundColor = '#FFC107';
+                } else {
+                    treeObj.healthFill.style.backgroundColor = '#F44336';
+                }
+            }
+            
+            function waterTree(tree) {
+                if (!hasWater || tree.watered || tree.grown) return;
+                
+                playSound('waterTreeSound', 0.5);
+                
+                tree.watered = true;
+                hasWater = false;
+                bucketIndicator.textContent = 'Пустое ведро - сходи к речке';
+                updateCursor();
+                
+                if (!hasShownWaterSuccessAlert) {
+                    showWaterSuccessAlert();
+                    hasShownWaterSuccessAlert = true;
+                }
+                
+                const waterPuddle = document.createElement('div');
+                waterPuddle.className = 'water-puddle';
+                tree.container.insertBefore(waterPuddle, tree.progressContainer);
+                
+                const waterAnimation = document.createElement('div');
+                waterAnimation.className = 'water-animation';
+                waterAnimation.style.left = (tree.x - (isMobile ? 30 : 40)) + 'px';
+                waterAnimation.style.top = (tree.y - (isMobile ? 30 : 40)) + 'px';
+                gameField.appendChild(waterAnimation);
+                
+                setTimeout(() => {
+                    if (waterAnimation.parentNode) {
+                        gameField.removeChild(waterAnimation);
+                    }
+                }, 1000);
+                
+                const waterEffect = document.createElement('div');
+                waterEffect.className = 'water-effect';
+                waterEffect.style.left = (tree.x - (isMobile ? 40 : 50)) + 'px';
+                waterEffect.style.top = (tree.y - (isMobile ? 40 : 50)) + 'px';
+                gameField.appendChild(waterEffect);
+                
+                setTimeout(() => {
+                    waterEffect.style.opacity = '1';
+                    setTimeout(() => {
+                        waterEffect.style.opacity = '0';
+                        setTimeout(() => {
+                            gameField.removeChild(waterEffect);
+                        }, 500);
+                    }, 500);
+                }, 10);
+                
+                clearTimeout(tree.growthTimer);
+                
+                const elapsed = Date.now() - tree.growthStartTime;
+                const remaining = Math.max(1000, tree.growthTime - elapsed);
+                const newRemaining = remaining / 2;
+                
+                tree.remainingGrowthTime = newRemaining;
+                
+                tree.progressBar.style.transition = 'none';
+                const currentProgress = (elapsed / tree.growthTime) * 100;
+                tree.progressBar.style.width = `${currentProgress}%`;
+                
+                setTimeout(() => {
+                    tree.progressBar.style.transition = `width ${newRemaining}ms linear`;
+                    tree.progressBar.style.width = '100%';
+                }, 10);
+                
+                tree.growthTimer = setTimeout(() => {
+                    finishTreeGrowth(tree);
+                }, newRemaining);
+                
+                tree.element.style.transition = `transform ${newRemaining}ms linear, opacity ${newRemaining}ms linear`;
+            }
+            
+            function startPlantCooldown() {
+                canPlant = false;
+                updateCursor();
+                plantCooldown = getPlantCooldown();
+                
+                plantTimerInterval = setInterval(() => {
+                    if (gamePaused) return;
+                    
+                    plantCooldown--;
+                    plantTimerElement.textContent = `Можно сажать: ${plantCooldown}с`;
+                    
+                    if (plantCooldown <= 0) {
+                        clearInterval(plantTimerInterval);
+                        canPlant = true;
+                        plantTimerElement.textContent = 'Можно сажать: сейчас!';
+                        updateCursor();
+                    }
+                }, 1000);
+            }
+            
+            function createLumberjack() {
+                if (!gameStarted || gamePaused) return;
+                
+                const grownTrees = trees.filter(tree => tree.grown);
+                
+                if (grownTrees.length === 0) return;
+                
+                const randomTreeIndex = Math.floor(Math.random() * grownTrees.length);
+                const targetTree = grownTrees[randomTreeIndex];
+                
+                const lumberjack = document.createElement('div');
+                lumberjack.className = 'lumberjack';
+                
+                const lumberjackContent = document.createElement('div');
+                lumberjackContent.className = 'lumberjack-content';
+                
+                const randomFaceIndex = Math.floor(Math.random() * lumberjackFaces.length);
+                const lumberjackFace = document.createElement('div');
+                lumberjackFace.className = 'lumberjack-face';
+                lumberjackFace.textContent = lumberjackFaces[randomFaceIndex];
+                
+                const lumberjackAxe = document.createElement('div');
+                lumberjackAxe.className = 'lumberjack-axe';
+                lumberjackAxe.textContent = '🪓';
+                
+                const lumberjackArmorBar = document.createElement('div');
+                lumberjackArmorBar.className = 'lumberjack-armor-bar';
+                const lumberjackArmorFill = document.createElement('div');
+                lumberjackArmorFill.className = 'lumberjack-armor-fill';
+                lumberjackArmorBar.appendChild(lumberjackArmorFill);
+                
+                lumberjackContent.appendChild(lumberjackAxe);
+                lumberjackContent.appendChild(lumberjackFace);
+                lumberjackContent.appendChild(lumberjackArmorBar);
+                
+                lumberjack.appendChild(lumberjackContent);
+                
+                const lumberjackHitbox = document.createElement('div');
+                lumberjackHitbox.className = 'lumberjack-hitbox';
+                lumberjack.appendChild(lumberjackHitbox);
+                
+                const side = Math.floor(Math.random() * 4);
+                let startX, startY;
+                
+                switch(side) {
+                    case 0:
+                        startX = Math.random() * gameField.offsetWidth;
+                        startY = -30;
+                        break;
+                    case 1:
+                        startX = gameField.offsetWidth + 30;
+                        startY = Math.random() * gameField.offsetHeight;
+                        break;
+                    case 2:
+                        startX = Math.random() * gameField.offsetWidth;
+                        startY = gameField.offsetHeight + 30;
+                        break;
+                    case 3:
+                        startX = -30;
+                        startY = Math.random() * gameField.offsetHeight;
+                        break;
+                }
+                
+                lumberjack.style.left = startX + 'px';
+                lumberjack.style.top = startY + 'px';
+                
+                gameField.appendChild(lumberjack);
+                
+                const baseSpeed = 1;
+                const levelSpeedBonus = (level - 1) * 0.2;
+                const randomSpeedVariation = Math.random() * 0.5;
+                const totalSpeed = baseSpeed + levelSpeedBonus + randomSpeedVariation;
+                
+                const armor = getLumberjackArmor();
+                
+                const lumberjackObj = {
+                    element: lumberjack,
+                    hitbox: lumberjackHitbox,
+                    content: lumberjackContent,
+                    face: lumberjackFace,
+                    axe: lumberjackAxe,
+                    armorBar: lumberjackArmorBar,
+                    armorFill: lumberjackArmorFill,
+                    x: startX,
+                    y: startY,
+                    targetTree: targetTree,
+                    speed: totalSpeed,
+                    armor: armor,
+                    currentArmor: armor,
+                    maxArmor: armor,
+                    active: true,
+                    moveAnimation: null,
+                    isAttacking: false,
+                    attackTimer: null,
+                    attackInterval: null,
+                    securityDamageInterval: null,
+                    securityCatchStarted: false,
+                    inSecurityZone: false,
+                    firstSecurityHit: false,
+                    currentSecurity: null,
+                    isRunningAway: false,
+                    entryPoint: {x: startX, y: startY},
+                    fingerElement: null
+                };
+                
+                lumberjacks.push(lumberjackObj);
+                
+                updateLumberjackArmorBar(lumberjackObj);
+                
+                lumberjackHitbox.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (lumberjackObj.active && !gamePaused && !lumberjackObj.isRunningAway) {
+                        stopLumberjack(lumberjackObj);
+                    }
+                });
+                
+                lumberjackHitbox.addEventListener('touchend', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (lumberjackObj.active && !gamePaused && !lumberjackObj.isRunningAway) {
+                        stopLumberjack(lumberjackObj);
+                    }
+                }, { passive: false });
+                
+                moveLumberjack(lumberjackObj);
+            }
+            
+            function showFinger(lumberjackObj) {
+                if (lumberjackObj.fingerElement) return;
+                
+                const finger = document.createElement('div');
+                finger.className = 'finger-icon';
+                finger.textContent = '☝️';
+                
+                const rect = lumberjackObj.element.getBoundingClientRect();
+                const fieldRect = gameField.getBoundingClientRect();
+                
+                const centerX = rect.left - fieldRect.left + rect.width / 2;
+                const centerY = rect.top - fieldRect.top + rect.height / 2 - 25;
+                
+                finger.style.left = centerX + 'px';
+                finger.style.top = centerY + 'px';
+                finger.style.display = 'block';
+                
+                gameField.appendChild(finger);
+                lumberjackObj.fingerElement = finger;
+            }
+            
+            function hideFinger(lumberjackObj) {
+                if (lumberjackObj.fingerElement && lumberjackObj.fingerElement.parentNode) {
+                    gameField.removeChild(lumberjackObj.fingerElement);
+                    lumberjackObj.fingerElement = null;
+                }
+            }
+            
+            function stopLumberjack(lumberjackObj) {
+                if (!lumberjackObj.active || lumberjackObj.isRunningAway || gamePaused) return;
+                
+                playSound('clickSound', 0.3);
+                
+                if (totalLumberjacksCaught === 0) {
+                    showFirstLumberjackCaughtAlert();
+                }
+                
+                lumberjackObj.currentArmor--;
+                
+                if (lumberjackObj.fingerElement) {
+                    lumberjackObj.fingerElement.classList.add('finger-hit');
+                    setTimeout(() => {
+                        if (lumberjackObj.fingerElement) {
+                            lumberjackObj.fingerElement.classList.remove('finger-hit');
+                        }
+                    }, 500);
+                }
+                
+                lumberjackObj.content.classList.add('armor-hit');
+                setTimeout(() => {
+                    lumberjackObj.content.classList.remove('armor-hit');
+                }, 300);
+                
+                updateLumberjackArmorBar(lumberjackObj);
+                
+                if (lumberjackObj.currentArmor <= 0) {
+                    makeLumberjackLeave(lumberjackObj);
+                }
+            }
+            
+            function makeLumberjackLeave(lumberjackObj) {
+                lumberjackObj.isRunningAway = true;
+                lumberjackObj.active = false;
+                
+                hideFinger(lumberjackObj);
+                
+                if (lumberjackObj.attackInterval) {
+                    clearInterval(lumberjackObj.attackInterval);
+                    lumberjackObj.attackInterval = null;
+                    lumberjackObj.isAttacking = false;
+                    lumberjackObj.axe.classList.remove('axe-swing-continuous');
+                }
+                
+                if (lumberjackObj.securityDamageInterval) {
+                    clearInterval(lumberjackObj.securityDamageInterval);
+                    lumberjackObj.securityDamageInterval = null;
+                }
+                
+                lumberjacksCaughtThisLevel += 0.25;
+                totalLumberjacksCaught += 0.25;
+                updateLevelProgress();
+                
+                playSound('catchLumberjackSound', 0.4);
+                
+                addScore(1, lumberjackObj.x, lumberjackObj.y);
+                
+                lumberjackLeave(lumberjackObj);
+            }
+            
+            function updateLumberjackArmorBar(lumberjackObj) {
+                const armorPercentage = (lumberjackObj.currentArmor / lumberjackObj.maxArmor) * 100;
+                lumberjackObj.armorFill.style.width = `${armorPercentage}%`;
+                
+                if (armorPercentage > 70) {
+                    lumberjackObj.armorFill.style.backgroundColor = '#795548';
+                } else if (armorPercentage > 30) {
+                    lumberjackObj.armorFill.style.backgroundColor = '#FF9800';
+                } else {
+                    lumberjackObj.armorFill.style.backgroundColor = '#F44336';
+                }
+            }
+            
+            function moveLumberjack(lumberjack) {
+                if (!lumberjack.active || !gameStarted || gamePaused) {
+                    if (lumberjack.moveAnimation) {
+                        cancelAnimationFrame(lumberjack.moveAnimation);
+                        lumberjack.moveAnimation = null;
+                    }
+                    return;
+                }
+                
+                if (!lumberjack.targetTree || !lumberjack.targetTree.grown || !trees.includes(lumberjack.targetTree)) {
+                    const grownTrees = trees.filter(tree => tree.grown);
+                    if (grownTrees.length > 0) {
+                        const randomTreeIndex = Math.floor(Math.random() * grownTrees.length);
+                        lumberjack.targetTree = grownTrees[randomTreeIndex];
+                    } else {
+                        lumberjackLeave(lumberjack);
+                        return;
+                    }
+                }
+                
+                if (lumberjack.fingerElement) {
+                    const rect = lumberjack.element.getBoundingClientRect();
+                    const fieldRect = gameField.getBoundingClientRect();
+                    
+                    const centerX = rect.left - fieldRect.left + rect.width / 2;
+                    const centerY = rect.top - fieldRect.top + rect.height / 2 - 25;
+                    
+                    lumberjack.fingerElement.style.left = centerX + 'px';
+                    lumberjack.fingerElement.style.top = centerY + 'px';
+                }
+                
+                let inSecurityZone = false;
+                let currentSecurity = null;
+                
+                for (const guard of securityGuards) {
+                    const dx = lumberjack.x - guard.x;
+                    const dy = lumberjack.y - guard.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < (isMobile ? 50 : 60)) {
+                        inSecurityZone = true;
+                        currentSecurity = guard;
+                        break;
+                    }
+                }
+                
+                if (inSecurityZone) {
+                    if (!lumberjack.inSecurityZone) {
+                        lumberjack.inSecurityZone = true;
+                        lumberjack.currentSecurity = currentSecurity;
+                        lumberjack.firstSecurityHit = false;
+                        lumberjack.securityCatchStarted = false;
+                    } else if (currentSecurity && lumberjack.currentSecurity !== currentSecurity) {
+                        lumberjack.currentSecurity = currentSecurity;
+                    }
+                } else {
+                    lumberjack.inSecurityZone = false;
+                    lumberjack.currentSecurity = null;
+                    lumberjack.firstSecurityHit = false;
+                    if (lumberjack.securityDamageInterval) {
+                        clearInterval(lumberjack.securityDamageInterval);
+                        lumberjack.securityDamageInterval = null;
+                        lumberjack.securityCatchStarted = false;
+                    }
+                }
+                
+                if (lumberjack.inSecurityZone && !lumberjack.securityCatchStarted) {
+                    lumberjack.securityCatchStarted = true;
+                    securityCatchLumberjack(lumberjack);
+                }
+                
+                const targetX = lumberjack.targetTree.x;
+                const targetY = lumberjack.targetTree.y;
+                
+                const dx = targetX - lumberjack.x;
+                const dy = targetY - lumberjack.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < (isMobile ? 25 : 30) && !lumberjack.isAttacking) {
+                    startAttackingTree(lumberjack);
+                    return;
+                }
+                
+                if (!lumberjack.isAttacking) {
+                    lumberjack.x += (dx / distance) * lumberjack.speed;
+                    lumberjack.y += (dy / distance) * lumberjack.speed;
+                    
+                    lumberjack.element.style.left = lumberjack.x + 'px';
+                    lumberjack.element.style.top = lumberjack.y + 'px';
+                }
+                
+                lumberjack.moveAnimation = requestAnimationFrame(() => moveLumberjack(lumberjack));
+            }
+            
+            function securityCatchLumberjack(lumberjack) {
+                if (lumberjack.securityDamageInterval) return;
+                
+                if (!lumberjack.firstSecurityHit) {
+                    lumberjack.firstSecurityHit = true;
+                    if (lumberjack.currentSecurity) {
+                        lumberjack.currentArmor -= lumberjack.currentSecurity.damage;
+                    } else {
+                        lumberjack.currentArmor -= 1;
+                    }
+                    
+                    updateLumberjackArmorBar(lumberjack);
+                    
+                    if (lumberjack.currentArmor <= 0) {
+                        playSound('catchLumberjackSound', 0.3);
+                        
+                        const securityCatch = document.createElement('div');
+                        securityCatch.className = 'security-catch';
+                        securityCatch.textContent = '🛡️';
+                        securityCatch.style.left = lumberjack.x + 'px';
+                        securityCatch.style.top = lumberjack.y + 'px';
+                        gameField.appendChild(securityCatch);
+                        
+                        setTimeout(() => {
+                            if (securityCatch.parentNode) {
+                                gameField.removeChild(securityCatch);
+                            }
+                        }, 1000);
+                        
+                        makeLumberjackLeave(lumberjack);
+                        return;
+                    }
+                }
+                
+                lumberjack.securityDamageInterval = setInterval(() => {
+                    if (!lumberjack.active || gamePaused || !lumberjack.inSecurityZone || lumberjack.isRunningAway) {
+                        clearInterval(lumberjack.securityDamageInterval);
+                        lumberjack.securityDamageInterval = null;
+                        lumberjack.securityCatchStarted = false;
+                        return;
+                    }
+                    
+                    if (lumberjack.currentSecurity) {
+                        lumberjack.currentArmor -= lumberjack.currentSecurity.damage;
+                    } else {
+                        lumberjack.currentArmor -= 1;
+                    }
+                    
+                    updateLumberjackArmorBar(lumberjack);
+                    
+                    if (lumberjack.currentArmor <= 0) {
+                        clearInterval(lumberjack.securityDamageInterval);
+                        lumberjack.securityDamageInterval = null;
+                        
+                        playSound('catchLumberjackSound', 0.3);
+                        
+                        const securityCatch = document.createElement('div');
+                        securityCatch.className = 'security-catch';
+                        securityCatch.textContent = '🛡️';
+                        securityCatch.style.left = lumberjack.x + 'px';
+                        securityCatch.style.top = lumberjack.y + 'px';
+                        gameField.appendChild(securityCatch);
+                        
+                        setTimeout(() => {
+                            if (securityCatch.parentNode) {
+                                gameField.removeChild(securityCatch);
+                            }
+                        }, 1000);
+                        
+                        makeLumberjackLeave(lumberjack);
+                    }
+                }, 1000);
+            }
+            
+            function startAttackingTree(lumberjack) {
+                if (lumberjack.isAttacking || lumberjack.isRunningAway) return;
+                
+                lumberjack.isAttacking = true;
+                
+                playSound('axeSwingSound', 0.5);
+                
+                lumberjack.axe.classList.add('axe-swing-continuous');
+                
+                lumberjack.attackInterval = setInterval(() => {
+                    if (!lumberjack.active || gamePaused || lumberjack.isRunningAway) {
+                        clearInterval(lumberjack.attackInterval);
+                        lumberjack.axe.classList.remove('axe-swing-continuous');
+                        return;
+                    }
+                    
+                    if (!lumberjack.targetTree || !lumberjack.targetTree.grown || !trees.includes(lumberjack.targetTree)) {
+                        clearInterval(lumberjack.attackInterval);
+                        lumberjack.isAttacking = false;
+                        lumberjack.axe.classList.remove('axe-swing-continuous');
+                        
+                        const grownTrees = trees.filter(tree => tree.grown);
+                        if (grownTrees.length > 0) {
+                            const randomTreeIndex = Math.floor(Math.random() * grownTrees.length);
+                            lumberjack.targetTree = grownTrees[randomTreeIndex];
+                        } else {
+                            lumberjackLeave(lumberjack);
+                        }
+                        return;
+                    }
+                    
+                    const now = Date.now();
+                    if (now - lumberjack.targetTree.lastDamageTime < 1000) {
+                        return;
+                    }
+                    
+                    lumberjack.axe.classList.add('axe-swing');
+                    setTimeout(() => {
+                        lumberjack.axe.classList.remove('axe-swing');
+                    }, 500);
+                    
+                    lumberjack.targetTree.health--;
+                    lumberjack.targetTree.lastDamageTime = now;
+                    
+                    lumberjack.targetTree.element.classList.add('tree-damage');
+                    setTimeout(() => {
+                        lumberjack.targetTree.element.classList.remove('tree-damage');
+                    }, 300);
+                    
+                    updateTreeHealthBar(lumberjack.targetTree);
+                    
+                    if (lumberjack.targetTree.health <= 0) {
+                        chopTree(lumberjack, lumberjack.targetTree);
+                        clearInterval(lumberjack.attackInterval);
+                        lumberjack.isAttacking = false;
+                        lumberjack.axe.classList.remove('axe-swing-continuous');
+                    }
+                }, 1000);
+            }
+            
+            function lumberjackLeave(lumberjack) {
+                lumberjack.active = false;
+                lumberjack.isAttacking = false;
+                
+                if (lumberjack.axe) {
+                    lumberjack.axe.classList.remove('axe-swing-continuous');
+                    lumberjack.axe.classList.remove('axe-swing');
+                }
+                
+                if (lumberjack.moveAnimation) {
+                    cancelAnimationFrame(lumberjack.moveAnimation);
+                }
+                if (lumberjack.attackInterval) {
+                    clearInterval(lumberjack.attackInterval);
+                }
+                if (lumberjack.securityDamageInterval) {
+                    clearInterval(lumberjack.securityDamageInterval);
+                }
+                
+                hideFinger(lumberjack);
+                
+                lumberjack.element.classList.add('lumberjack-leaving');
+                
+                setTimeout(() => {
+                    if (lumberjack.element.parentNode) {
+                        gameField.removeChild(lumberjack.element);
+                    }
+                    lumberjacks = lumberjacks.filter(l => l !== lumberjack);
+                }, 1500);
+            }
+            
+            function chopTree(lumberjack, tree) {
+                if (!lumberjack.active) return;
+                
+                if (!trees.includes(tree)) return;
+                
+                playSound('chopTreeSound', 0.7);
+                
+                showChoppedAlert();
+                
+                tree.container.style.transform = 'scale(0)';
+                setTimeout(() => {
+                    if (tree.container.parentNode) {
+                        gameField.removeChild(tree.container);
+                    }
+                    trees = trees.filter(t => t !== tree);
+                    
+                    checkGameOver();
+                }, 300);
+                
+                treeCount--;
+                choppedCount++;
+                treeCountElement.textContent = treeCount;
+                choppedCountElement.textContent = choppedCount;
+                totalTreesChopped++;
+                
+                addScore(-2, tree.x, tree.y);
+                
+                updateLevelProgress();
+                
+                updateProgressBar();
+                
+                const grownTrees = trees.filter(t => t.grown);
+                if (grownTrees.length > 0) {
+                    const randomTreeIndex = Math.floor(Math.random() * grownTrees.length);
+                    lumberjack.targetTree = grownTrees[randomTreeIndex];
+                    lumberjack.isAttacking = false;
+                    moveLumberjack(lumberjack);
+                } else {
+                    lumberjackLeave(lumberjack);
+                }
+                
+                checkLevelUp();
+            }
+            
+            function addScore(points, x, y) {
+                score += points;
+                scoreCountElement.textContent = Math.round(score * 10) / 10;
+                
+                if (points > 0) {
+                    scoreInCurrentLevel += points;
+                }
+                
+                updateShopButtons();
+                
+                const scoreAlert = document.createElement('div');
+                scoreAlert.className = 'score-alert';
+                scoreAlert.textContent = (points > 0 ? '+' : '') + points;
+                scoreAlert.style.color = points > 0 ? '#2E7D32' : '#D32F2F';
+                scoreAlert.style.left = x + 'px';
+                scoreAlert.style.top = y + 'px';
+                
+                gameField.appendChild(scoreAlert);
+                
+                setTimeout(() => {
+                    if (scoreAlert.parentNode) {
+                        gameField.removeChild(scoreAlert);
+                    }
+                }, 1500);
+            }
+            
+            function updateProgressBar() {
+                const totalPlanted = treeCount + choppedCount;
+                if (totalPlanted === 0) {
+                    progressBar.style.width = '0%';
+                    return;
+                }
+                
+                const progress = (treeCount / totalPlanted) * 100;
+                progressBar.style.width = progress + '%';
+                
+                if (progress > maxProgressInSession) {
+                    maxProgressInSession = progress;
+                }
+                
+                if (progress > 70) {
+                    progressBar.style.backgroundColor = '#4CAF50';
+                } else if (progress > 30) {
+                    progressBar.style.backgroundColor = '#FFC107';
+                } else {
+                    progressBar.style.backgroundColor = '#F44336';
+                }
+            }
+            
+            function checkLevelUp() {
+                if (calculateLevelProgress() >= TREES_PER_LEVEL) {
+                    const oldLevel = level;
+                    level++;
+                    
+                    playSound('levelUpSound', 0.6);
+                    
+                    if (level > MAX_LEVEL) {
+                        gamePaused = true;
+                        pausedOverlay.style.display = 'flex';
+                        pauseButton.textContent = 'Продолжить';
+                        
+                        showVictory();
+                        return;
+                    }
+                    
+                    scoreFromPreviousLevel = scoreInCurrentLevel;
+                    
+                    let levelBonus = 0;
+                    if (level >= 1 && level <= 3) {
+                        levelBonus = 20;
+                    } else if (level >= 4 && level <= 6) {
+                        levelBonus = 30;
+                    } else if (level >= 7 && level <= 9) {
+                        levelBonus = 50;
+                    } else if (level >= 10 && level <= 12) {
+                        levelBonus = 70;
+                    }
+                    
+                    treesPlantedThisLevel = 0;
+                    treesGrownThisLevel = 0;
+                    lumberjacksCaughtThisLevel = 0;
+                    caughtLumberjacksThisLevel = 0;
+                    
+                    removeAllLumberjacks();
+                    
+                    levelElement.textContent = level;
+                    
+                    updateLevelProgress();
+                    
+                    addScore(levelBonus, gameField.offsetWidth / 2, gameField.offsetHeight / 2);
+                    
+                    scoreInCurrentLevel = 0;
+                    
+                    removeAllSecurityGuards();
+                    
+                    isFirstLevel = false;
+                    startLumberjackTimer();
+                    
+                    updateShopButtons();
+                }
+            }
+            
+            function removeAllSecurityGuards() {
+                securityGuards.forEach(guard => {
+                    if (guard.element && guard.element.parentNode) {
+                        gameField.removeChild(guard.element);
+                    }
+                    if (guard.range && guard.range.parentNode) {
+                        gameField.removeChild(guard.range);
+                    }
+                });
+                
+                securityGuards = [];
+                securityCount = 0;
+                securityCountElement.textContent = '0/12';
+                availableSecurity = 0;
+            }
+            
+            function checkGameOver() {
+                if (gameStarted && trees.length === 0) {
+                    showGameOver();
+                }
+            }
+            
+            function getForestStateMessage() {
+                const totalPlanted = treeCount + choppedCount;
+                
+                const progress = (treeCount / totalPlanted) * 100;
+                
+                if (progress > 70) {
+                    return "Ты посадил прекрасный лес! 🌳🌲🎄";
+                } else if (progress > 30) {
+                    return "Твой лес сильно пострадал, но ты справился! 🌳🍃";
+                } else {
+                    return "Почти все твои деревья срубили, но ты прошёл игру! 🍃";
+                }
+            }
+            
+            function showVictory() {
+                gameStarted = false;
+                gamePaused = true;
+                finalScoreElement.textContent = Math.round(score * 10) / 10;
+                
+                updateProgressRecord(Math.round(maxProgressInSession));
+                
+                playSound('victorySound', 0.6);
+                
+                finalTreesPlanted.textContent = totalTreesPlanted;
+                finalTreesChopped.textContent = totalTreesChopped;
+                finalLumberjacksCaught.textContent = Math.round(totalLumberjacksCaught * 10) / 10;
+                
+                victoryMessageText.textContent = getForestStateMessage();
+                
+                displayProgressRecord();
+                
+                victoryMessage.style.display = 'block';
+                
+                pausedOverlay.style.display = 'flex';
+                
+                clearIntervals();
+            }
+            
+            function showGameOver() {
+                gameStarted = false;
+                
+                displayProgressRecord();
+                
+                gameOverMessage.style.display = 'block';
+                
+                clearIntervals();
+            }
+            
+            function clearIntervals() {
+                if (gameInterval) clearInterval(gameInterval);
+                if (lumberjackInterval) clearInterval(lumberjackInterval);
+                if (plantTimerInterval) clearInterval(plantTimerInterval);
+                if (startTimerInterval) clearInterval(startTimerInterval);
+                if (securityInterval) clearInterval(securityInterval);
+                if (lumberjackTimerInterval) clearInterval(lumberjackTimerInterval);
+                
+                lumberjacks.forEach(lumberjack => {
+                    if (lumberjack.attackInterval) {
+                        clearInterval(lumberjack.attackInterval);
+                    }
+                    if (lumberjack.securityDamageInterval) {
+                        clearInterval(lumberjack.securityDamageInterval);
+                    }
+                });
+            }
+            
+            function clearTreeTimers() {
+                trees.forEach(tree => {
+                    if (tree.growthTimer) {
+                        clearTimeout(tree.growthTimer);
+                    }
+                });
+            }
+            
+            function clearLumberjackAnimations() {
+                lumberjacks.forEach(lumberjack => {
+                    if (lumberjack.moveAnimation) {
+                        cancelAnimationFrame(lumberjack.moveAnimation);
+                    }
+                });
+            }
+            
+            function togglePause() {
+                if (level >= MAX_LEVEL && gamePaused) {
+                    return;
+                }
+                
+                if (!gameStarted) return;
+                
+                playSound('clickSound', 0.2);
+                
+                gamePaused = !gamePaused;
+                
+                if (gamePaused) {
+                    trees.forEach(tree => {
+                        if (!tree.grown && tree.growthTimer) {
+                            clearTimeout(tree.growthTimer);
+                            const elapsed = Date.now() - tree.growthStartTime;
+                            tree.remainingGrowthTime = Math.max(0, tree.growthTime - elapsed);
+                            
+                            if (tree.progressBar) {
+                                const computedStyle = window.getComputedStyle(tree.progressBar);
+                                const currentWidth = parseFloat(computedStyle.width);
+                                tree.progressBar.style.transition = 'none';
+                                tree.progressBar.style.width = `${currentWidth}px`;
+                            }
+                        }
+                    });
+                    
+                    clearLumberjackAnimations();
+                    hideAllFingers();
+                    
+                    lumberjacks.forEach(lumberjack => {
+                        if (lumberjack.attackInterval) {
+                            clearInterval(lumberjack.attackInterval);
+                        }
+                        if (lumberjack.securityDamageInterval) {
+                            clearInterval(lumberjack.securityDamageInterval);
+                        }
+                    });
+                    
+                    pausedOverlay.style.display = 'flex';
+                    pauseButton.textContent = 'Продолжить';
+                    if (mobilePauseButton) {
+                        mobilePauseButton.textContent = '▶';
+                    }
+                } else {
+                    trees.forEach(tree => {
+                        if (!tree.grown && tree.remainingGrowthTime > 0) {
+                            tree.growthStartTime = Date.now();
+                            
+                            if (tree.progressBar) {
+                                const currentWidth = parseFloat(tree.progressBar.style.width) || 0;
+                                const targetWidth = isMobile ? 40 : 50;
+                                const remainingProgress = targetWidth - currentWidth;
+                                const progressPercentage = (remainingProgress / targetWidth) * 100;
+                                
+                                tree.progressBar.style.transition = `width ${tree.remainingGrowthTime}ms linear`;
+                                tree.progressBar.style.width = '100%';
+                            }
+                            
+                            tree.growthTimer = setTimeout(() => {
+                                finishTreeGrowth(tree);
+                            }, tree.remainingGrowthTime);
+                        }
+                    });
+                    
+                    lumberjacks.forEach(lumberjack => {
+                        if (lumberjack.active && !lumberjack.isRunningAway) {
+                            moveLumberjack(lumberjack);
+                            
+                            if (lumberjack.isAttacking && lumberjack.targetTree) {
+                                startAttackingTree(lumberjack);
+                            }
+                        }
+                    });
+                    
+                    pausedOverlay.style.display = 'none';
+                    pauseButton.textContent = 'Пауза';
+                    if (mobilePauseButton) {
+                        mobilePauseButton.textContent = '⏸';
+                    }
+                }
+                updateCursor();
+            }
+            
+            function startGame() {
+                if (gameStarted) return;
+                
+                playSound('clickSound', 0.2);
+                
+                gameStarted = true;
+                startButton.textContent = 'Игра идет...';
+                startScreen.style.display = 'none';
+                
+                if (!isMobile) {
+                    if (gameInfo) gameInfo.style.display = 'flex';
+                    if (levelProgress) levelProgress.style.display = 'block';
+                    if (progressBarContainer) progressBarContainer.style.display = 'block';
+                } else {
+                    if (gameInfo) gameInfo.style.display = 'flex';
+                    if (levelProgress) levelProgress.style.display = 'block';
+                    if (progressBarContainer) progressBarContainer.style.display = 'block';
+                }
+                
+                if (isMobile && mobileShopButtons) {
+                    mobileShopButtons.style.display = 'flex';
+                }
+                
+                lumberjackTimerElement.style.display = 'none';
+                
+                let initialBonus = 0;
+                if (level >= 1 && level <= 3) {
+                    initialBonus = 20;
+                } else if (level >= 4 && level <= 6) {
+                    initialBonus = 30;
+                } else if (level >= 7 && level <= 9) {
+                    initialBonus = 50;
+                } else if (level >= 10 && level <= 12) {
+                    initialBonus = 70;
+                }
+                
+                addScore(initialBonus, gameField.offsetWidth / 2, gameField.offsetHeight / 2);
+                
+                setTimeout(() => {
+                    canPlant = true;
+                    plantTimerElement.textContent = 'Можно сажать: сейчас!';
+                    updateCursor();
+                }, 500);
+                
+                startTimer.style.display = 'flex';
+                startCountdown = 10;
+                
+                startTimerInterval = setInterval(() => {
+                    if (gamePaused) return;
+                    
+                    startCountdown--;
+                    startTimer.querySelector('div:first-child').textContent = startCountdown;
+                    
+                    if (startCountdown <= 0) {
+                        clearInterval(startTimerInterval);
+                        startTimer.style.display = 'none';
+                        
+                        if (treeCount === 0) {
+                            showGameOver();
+                            return;
+                        }
+                    }
+                }, 1000);
+            }
+            
+            function fillBucket() {
+                if (hasWater || gamePaused || placingSecurity) return;
+                
+                playSound('waterCollectSound', 0.6);
+                
+                hasWater = true;
+                bucketIndicator.textContent = '💧 Полей молодое дерево';
+                
+                if (!hasShownWaterFirstAlert) {
+                    showWaterFirstAlert();
+                }
+                
+                river.style.background = 'linear-gradient(to bottom, #4FC3F7, #0288D1)';
+                setTimeout(() => {
+                    river.style.background = 'linear-gradient(to bottom, #1E88E5, #0D47A1)';
+                }, 500);
+            }
+            
+            function placeSecurity(x, y) {
+                if (!gameStarted || gamePaused || !placingSecurity) return;
+                
+                if (!canPlaceSecurityAtPosition(x, y)) return;
+                
+                playSound('securityPlaceSound', 0.5);
+                
+                const securityGuard = document.createElement('div');
+                securityGuard.className = 'security-guard';
+                securityGuard.textContent = '🛡️';
+                securityGuard.style.left = (x - (isMobile ? 12 : 15)) + 'px';
+                securityGuard.style.top = (y - (isMobile ? 12 : 15)) + 'px';
+                
+                const securityRange = document.createElement('div');
+                securityRange.className = 'security-range';
+                securityRange.style.left = (x - (isMobile ? 50 : 60)) + 'px';
+                securityRange.style.top = (y - (isMobile ? 50 : 60)) + 'px';
+                securityRange.style.width = (isMobile ? '100px' : '120px');
+                securityRange.style.height = (isMobile ? '100px' : '120px');
+                
+                gameField.appendChild(securityRange);
+                gameField.appendChild(securityGuard);
+                
+                const securityObj = {
+                    element: securityGuard,
+                    range: securityRange,
+                    x: x,
+                    y: y,
+                    damage: getSecurityDamage(level)
+                };
+                
+                securityGuards.push(securityObj);
+                
+                availableSecurity--;
+                securityCount++;
+                securityCountElement.textContent = `${securityCount}/12`;
+                
+                placingSecurity = false;
+                bucketIndicator.textContent = 'Пустое ведро - сходи к речке';
+                updateCursor();
+                
+                lastSecurityPurchaseTime = 0;
+                
+                updateShopButtons();
+            }
+            
+            function updateShopButtons() {
+                buyPlantSpeedButton.disabled = score < plantSpeedBoostPrice || plantSpeedBoost >= MAX_PLANT_SPEED;
+                buyPlantSpeedButton.textContent = `${plantSpeedBoostPrice} очков`;
+                
+                buyGrowthBoostButton.disabled = score < growthBoostPrice || growthBoost >= MAX_GROWTH_BOOST;
+                buyGrowthBoostButton.textContent = `${growthBoostPrice} очков`;
+                
+                const securityPrice = getSecurityPrice(level);
+                const now = Date.now();
+                const canBuySecurity = (now - lastSecurityPurchaseTime > SECURITY_PURCHASE_COOLDOWN) && 
+                                      availableSecurity === 0 && securityCount < MAX_SECURITY;
+                
+                buySecurityButton.disabled = score < securityPrice || 
+                                           securityCount >= MAX_SECURITY || 
+                                           !canBuySecurity;
+                buySecurityButton.textContent = `${securityPrice} очков`;
+                buySecurityButton.setAttribute('data-price', securityPrice);
+                
+                mobilePlantSpeedButton.disabled = score < plantSpeedBoostPrice || plantSpeedBoost >= MAX_PLANT_SPEED;
+                mobilePlantSpeedPrice.textContent = `${plantSpeedBoostPrice} очков`;
+                
+                mobileGrowthBoostButton.disabled = score < growthBoostPrice || growthBoost >= MAX_GROWTH_BOOST;
+                mobileGrowthBoostPrice.textContent = `${growthBoostPrice} очков`;
+                
+                mobileSecurityButton.disabled = score < securityPrice || 
+                                              securityCount >= MAX_SECURITY || 
+                                              !canBuySecurity;
+                mobileSecurityPrice.textContent = `${securityPrice} очков`;
+            }
+            
+            function buySecurity() {
+                const securityPrice = getSecurityPrice(level);
+                const now = Date.now();
+                
+                if (now - lastSecurityPurchaseTime < SECURITY_PURCHASE_COOLDOWN) {
+                    return;
+                }
+                
+                if (score < securityPrice || securityCount >= MAX_SECURITY || availableSecurity > 0) return;
+                
+                playSound('securitySound', 0.6);
+                
+                score -= securityPrice;
+                scoreCountElement.textContent = Math.round(score * 10) / 10;
+                availableSecurity++;
+                
+                lastSecurityPurchaseTime = now;
+                
+                if (!hasShownSecurityInstruction) {
+                    showPlaceSecurityAlert();
+                    hasShownSecurityInstruction = true;
+                }
+                
+                placingSecurity = true;
+                bucketIndicator.textContent = 'Размести охрану';
+                updateCursor();
+                
+                updateShopButtons();
+            }
+            
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    }
+                    mobileFullscreenButton.textContent = '✕';
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                    mobileFullscreenButton.textContent = '⛶';
+                }
+            }
+            
+            document.addEventListener('fullscreenchange', function() {
+                if (!document.fullscreenElement) {
+                    mobileFullscreenButton.textContent = '⛶';
+                }
+            });
+            
+            document.addEventListener('webkitfullscreenchange', function() {
+                if (!document.webkitFullscreenElement) {
+                    mobileFullscreenButton.textContent = '⛶';
+                }
+            });
+            
+            document.addEventListener('msfullscreenchange', function() {
+                if (!document.msFullscreenElement) {
+                    mobileFullscreenButton.textContent = '⛶';
+                }
+            });
+            
+            function setupSoundControls() {
+                musicToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    playSound('clickSound', 0.2);
+                    musicEnabled = !musicEnabled;
+                    musicToggle.classList.toggle('muted', !musicEnabled);
+                    
+                    if (musicEnabled) {
+                        try {
+                            backgroundMusic.volume = 0.3;
+                            backgroundMusic.play().catch(e => {});
+                        } catch(e) {}
+                    } else {
+                        backgroundMusic.pause();
+                        backgroundMusic.currentTime = 0;
+                    }
+                });
+                
+                soundToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    playSound('clickSound', 0.2);
+                    soundsEnabled = !soundsEnabled;
+                    soundToggle.classList.toggle('muted', !soundsEnabled);
+                    soundToggle.textContent = soundsEnabled ? '🔊' : '🔈';
+                });
+                
+                mobileFullscreenButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    playSound('clickSound', 0.2);
+                    toggleFullscreen();
+                });
+                
+                if (isMobile) {
+                    addButtonClickAnimation(mobilePauseButton);
+                    addButtonClickAnimation(mobileResetButton);
+                    addButtonClickAnimation(mobileFullscreenButton);
+                    addButtonClickAnimation(mobilePlantSpeedButton);
+                    addButtonClickAnimation(mobileGrowthBoostButton);
+                    addButtonClickAnimation(mobileSecurityButton);
+                }
+            }
+            
+            function playBackgroundMusicFunc() {
+                if (!musicEnabled || gamePaused) return;
+                
+                try {
+                    backgroundMusic.volume = 0.3;
+                    backgroundMusic.play().catch(e => {});
+                } catch(e) {}
+            }
+            
+            function playChopSound(volume = 0.7) {
+                if (!soundsEnabled || gamePaused) return;
+                
+                try {
+                    externalChopSound.currentTime = 0;
+                    externalChopSound.volume = volume;
+                    externalChopSound.play().catch(e => {});
+                } catch(e) {}
+            }
+            
+            function playSound(soundName, volume = 1.0) {
+                if (!soundsEnabled || gamePaused) return;
+                
+                initAudioContext();
+                
+                if (soundName === 'chopTreeSound') {
+                    playChopSound(volume);
+                    return;
+                }
+                
+                try {
+                    if (window[soundName + 'Play']) {
+                        window[soundName + 'Play']();
+                    }
+                } catch(e) {}
+            }
+            
+            function createAudioBuffers() {
+                createToneSound('plantTreeSound', 200, 0.2, 0.3);
+                createToneSound('waterCollectSound', 600, 0.2, 0.4);
+                createWaterSound('waterTreeSound');
+                createMagicSound('treeGrowSound');
+                createUpgradeSound('upgradeSound');
+                createTrumpetSound('securitySound');
+                createWinSound('catchLumberjackSound');
+                createLevelUpSound('levelUpSound');
+                createGameOverSound('gameEndSound');
+                createVictorySound('victorySound');
+                createClickSound('clickSound');
+                createRoarSound('securityPlaceSound');
+            }
+            
+            function createToneSound(elementId, frequency, duration, volume) {
+                try {
+                    window[elementId + 'Play'] = function() {
+                        if (!audioContextInitialized) return;
+                        const osc = audioContext.createOscillator();
+                        const gain = audioContext.createGain();
+                        
+                        osc.connect(gain);
+                        gain.connect(audioContext.destination);
+                        
+                        osc.frequency.value = frequency;
+                        osc.type = 'sine';
+                        
+                        gain.gain.value = volume;
+                        
+                        osc.start();
+                        setTimeout(() => {
+                            osc.stop();
+                        }, duration * 1000);
+                        
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+                    };
+                } catch(e) {}
+            }
+            
+            function createWaterSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        for(let i = 0; i < 5; i++) {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = 800 - i * 100;
+                                oscillator.type = 'sine';
+                                
+                                gainNode.gain.value = 0.1;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 300);
+                            }, i * 100);
+                        }
+                    } catch(e) {}
+                };
+            }
+            
+            function createMagicSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const frequencies = [523.25, 587.33, 659.25, 783.99, 880.00, 987.77];
+                        
+                        frequencies.forEach((freq, index) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = freq;
+                                oscillator.type = 'sine';
+                                
+                                gainNode.gain.value = 0.1;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 300);
+                            }, index * 100);
+                        });
+                    } catch(e) {}
+                };
+            }
+            
+            function createUpgradeSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const oscillator1 = audioContext.createOscillator();
+                        const oscillator2 = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator1.connect(gainNode);
+                        oscillator2.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator1.frequency.value = 800;
+                        oscillator2.frequency.value = 1000;
+                        oscillator1.type = 'sine';
+                        oscillator2.type = 'sine';
+                        
+                        gainNode.gain.value = 0.2;
+                        
+                        oscillator1.start();
+                        oscillator2.start();
+                        
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                        
+                        setTimeout(() => {
+                            oscillator1.stop();
+                            oscillator2.stop();
+                        }, 500);
+                    } catch(e) {}
+                };
+            }
+            
+            function createTrumpetSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const frequencies = [440, 554.37, 659.25];
+                        
+                        frequencies.forEach((freq, index) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = freq;
+                                oscillator.type = 'sawtooth';
+                                
+                                gainNode.gain.value = 0.15;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 400);
+                            }, index * 200);
+                        });
+                    } catch(e) {}
+                };
+            }
+            
+            function createWinSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const frequencies = [523.25, 659.25, 783.99, 1046.50];
+                        
+                        frequencies.forEach((freq, index) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = freq;
+                                oscillator.type = 'triangle';
+                                
+                                gainNode.gain.value = 0.1;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 300);
+                            }, index * 150);
+                        });
+                    } catch(e) {}
+                };
+            }
+            
+            function createLevelUpSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const frequencies = [392.00, 493.88, 587.33, 783.99, 987.77];
+                        
+                        frequencies.forEach((freq, index) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = freq;
+                                oscillator.type = 'sawtooth';
+                                
+                                gainNode.gain.value = 0.15;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 400);
+                            }, index * 200);
+                        });
+                    } catch(e) {}
+                };
+            }
+            
+            function createGameOverSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const frequencies = [523.25, 392.00, 293.66, 196.00];
+                        
+                        frequencies.forEach((freq, index) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = freq;
+                                oscillator.type = 'sine';
+                                
+                                gainNode.gain.value = 0.2;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 500);
+                            }, index * 300);
+                        });
+                    } catch(e) {}
+                };
+            }
+            
+            function createVictorySound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const frequencies = [659.25, 830.61, 1046.50, 1318.51];
+                        
+                        frequencies.forEach((freq, index) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+                                
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+                                
+                                oscillator.frequency.value = freq;
+                                oscillator.type = 'sine';
+                                
+                                gainNode.gain.value = 0.15;
+                                
+                                oscillator.start();
+                                
+                                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.4);
+                                
+                                setTimeout(() => {
+                                    oscillator.stop();
+                                }, 400);
+                            }, index * 200);
+                        });
+                    } catch(e) {}
+                };
+            }
+            
+            function createClickSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = 1000;
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.value = 0.1;
+                        
+                        oscillator.start();
+                        
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+                        
+                        setTimeout(() => {
+                            oscillator.stop();
+                        }, 100);
+                    } catch(e) {}
+                };
+            }
+            
+            function createRoarSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = 80;
+                        oscillator.type = 'sawtooth';
+                        
+                        gainNode.gain.value = 0.2;
+                        
+                        oscillator.start();
+                        
+                        oscillator.frequency.exponentialRampToValueAtTime(120, audioContext.currentTime + 0.5);
+                        
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+                        
+                        setTimeout(() => {
+                            oscillator.stop();
+                        }, 800);
+                    } catch(e) {}
+                };
+            }
+            
+            function addButtonClickSounds() {
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(button => {
+                    if (button.id !== 'musicToggle' && button.id !== 'soundToggle') {
+                        let lastClick = 0;
+                        button.addEventListener('click', function(e) {
+                            if (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }
+                            const now = Date.now();
+                            if (now - lastClick < 300) return;
+                            lastClick = now;
+                            playSound('clickSound', 0.2);
+                        });
+                    }
+                });
+            }
+            
+            function initGame() {
+                createAudioBuffers();
+                setupSoundControls();
+                setupMobilePauseButton();
+                setupMobileResetButton();
+                setupMobileTouchHandlers();
+                setupGameFieldClickHandler();
+                setupLumberjackHoverEffects();
+                
+                startButton.addEventListener('click', handleStartGame);
+                startScreenButton.addEventListener('click', handleStartGame);
+                pauseButton.addEventListener('click', handlePauseGame);
+                resetButton.addEventListener('click', handleResetGame);
+                playAgainButton.addEventListener('click', handleResetGame);
+                restartButton.addEventListener('click', handleResetGame);
+                buyPlantSpeedButton.addEventListener('click', handleBuyPlantSpeed);
+                buyGrowthBoostButton.addEventListener('click', handleBuyGrowthBoost);
+                buySecurityButton.addEventListener('click', handleBuySecurity);
+                river.addEventListener('click', handleRiverClick);
+                
+                mobilePlantSpeedButton.addEventListener('click', handleBuyPlantSpeed);
+                mobileGrowthBoostButton.addEventListener('click', handleBuyGrowthBoost);
+                mobileSecurityButton.addEventListener('click', handleBuySecurity);
+                
+                if (!isMobile) {
+                    document.addEventListener('keydown', function(event) {
+                        if (!gameStarted || gamePaused) return;
+                        
+                        if (event.key === '1' || event.key === 'Digit1') {
+                            buyPlantSpeed();
+                        }
+                        else if (event.key === '2' || event.key === 'Digit2') {
+                            buyGrowthBoost();
+                        }
+                        else if (event.key === '3' || event.key === 'Digit3') {
+                            buySecurity();
+                        }
+                    });
+                }
+                
+                gameField.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                });
+                
+                addButtonClickSounds();
+                
+                if (isMobile && mobileShopButtons) {
+                    mobileShopButtons.style.display = 'none';
+                }
+                
+                if (isMobile) {
+                    if (gameInfo) gameInfo.style.display = 'none';
+                    if (levelProgress) levelProgress.style.display = 'none';
+                    if (progressBarContainer) progressBarContainer.style.display = 'none';
+                } else {
+                    if (gameInfo) gameInfo.style.display = 'flex';
+                    if (levelProgress) levelProgress.style.display = 'block';
+                    if (progressBarContainer) progressBarContainer.style.display = 'block';
+                }
+                
+                if (isMobile) {
+                    mobilePauseButton.style.display = 'none';
+                    mobileResetButton.style.display = 'none';
+                    mobileFullscreenButton.style.display = 'none';
+                }
+                
+                displayProgressRecord();
+                
+                updateProgressBar();
+                updateLevelProgress();
+                updateShopButtons();
+                updateCursor();
+                
+                setTimeout(() => {
+                    if (musicEnabled) {
+                        playBackgroundMusicFunc();
+                    }
+                }, 1000);
+            }
+            
+            initGame();
+        });
+    </script>
+</body>
+</html>
