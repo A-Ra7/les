@@ -661,7 +661,7 @@
         }
         
         .high-score-display {
-            font-size: 18px;
+            font-size: 20px;
             color: #FFD700;
             margin: 10px 0;
             font-weight: bold;
@@ -1122,7 +1122,7 @@
         }
         
         .upgrade-alert-faster-plant {
-            background: linear-gradient(to right, #e3d512, #cdd40a);
+            background: linear-gradient(to right, #e2d517, #bcc20d);
         }
         
         .upgrade-alert-faster-grow {
@@ -1185,7 +1185,6 @@
             background-color: #e0e0e0;
         }
         
-        /* Новые стили для мобильных кнопок магазина */
         .mobile-shop-buttons {
             display: none;
             width: 100%;
@@ -1258,7 +1257,6 @@
             background: linear-gradient(to bottom, #ffa200, #cf6d0c);
         }
         
-        /* Кнопка полноэкранного режима */
         .mobile-fullscreen-button {
             position: fixed;
             top: 10px;
@@ -1291,7 +1289,6 @@
             transform: scale(0.95);
         }
         
-        /* Анимация для кнопок на мобильных устройствах */
         @keyframes buttonClick {
             0% {
                 transform: scale(1);
@@ -1308,7 +1305,6 @@
             animation: buttonClick 0.2s ease;
         }
         
-        /* Уведомление о первой поимке лесоруба */
         .first-lumberjack-alert {
             position: absolute;
             top: 15px;
@@ -1329,7 +1325,26 @@
             line-height: 1.4;
         }
         
-        /* Улучшения для полноэкранного режима */
+        .first-tree-grown-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 3s ease-in-out;
+            max-width: 90%;
+            line-height: 1.4;
+        }
+        
         :fullscreen {
             background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
         }
@@ -1346,8 +1361,36 @@
             background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
         }
         
+        /* Новый стиль для подсветки найденного места */
+        .auto-place-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #FF9800;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 20;
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(0.5);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+        
         @media (max-width: 480px) {
             .container h1 {
+                margin-top: 70px;
                 font-size: 30px;
             }
 
@@ -1460,7 +1503,6 @@
                 background-color: #2bde34;
             }
             
-            /* Показываем мобильные кнопки магазина */
             .mobile-shop-buttons {
                 display: none;
             }
@@ -1477,12 +1519,10 @@
                 width: 100%;
             }
             
-            /* Показываем кнопку полноэкранного режима на мобильных устройствах */
             .mobile-fullscreen-button {
                 display: none;
             }
             
-            /* Улучшаем отступы для мобильных устройств */
             .container {
                 padding: 0 5px;
             }
@@ -1503,7 +1543,6 @@
             }
             
             .high-score-display {
-                font-size: 16px;
                 margin: 8px 0;
             }
             
@@ -1549,7 +1588,7 @@
         
         @media (min-width: 481px) and (max-width: 768px) {
             .container h1 {
-                margin-top: 50px;
+                margin-top: 70px;
                 font-size: 30px;
             }
 
@@ -1783,11 +1822,12 @@
                 <div class="upgrade-alert upgrade-alert-faster-plant" id="plantSpeedAlert">Деревья садятся теперь быстрее</div>
                 <div class="upgrade-alert upgrade-alert-faster-grow" id="growthBoostAlert">Деревья растут теперь быстрее</div>
                 <div class="first-lumberjack-alert" id="firstLumberjackAlert">Поймай как можно больше нелегальных лесорубов</div>
+                <div class="first-tree-grown-alert" id="firstTreeGrownAlert">Теперь посади лес...</div>
                 
                 <div class="start-screen" id="startScreen">
                     <h2>Посади Лес</h2>
                     <p>Твоя задача - посадить как можно больше деревьев и защитить их от нелегальных лесорубов. Нажимай на поле, чтобы посадить деревья, и на речку, чтобы набрать воды для полива.</p>
-                    <div id="startScreenHighScore" class="high-score-display">Рекорд состояния леса: 0%</div>
+                    <div id="startScreenHighScore" class="high-score-display">Рекорд посадки леса: 0%</div>
                     <button id="startScreenButton" style="width: auto; padding: 12px 25px; font-size: 18px; min-height: 50px;">Начать игру</button>
                 </div>
                 <div class="plant-timer" id="plantTimer">Можно сажать: 0с</div>
@@ -1806,7 +1846,6 @@
                 <div class="chopped-alert" id="choppedAlert">Нелегальный лесоруб срубил дерево</div>
             </div>
             
-            <!-- Новые мобильные кнопки -->
             <div class="mobile-shop-buttons" id="mobileShopButtons">
                 <button class="mobile-shop-button" id="mobilePlantSpeedButton">
                     <div class="mobile-shop-button-icon">👨‍🌾</div>
@@ -1874,8 +1913,7 @@
     <div class="victory-message" id="victoryMessage">
         <h2>Поздравляем!</h2>
         <p id="victoryMessageText">Ты прошел все 12 уровней и посадил прекрасный лес</p>
-        <p>Твой итоговый счет: <span id="finalScore">0</span> очков</p>
-        <div id="victoryHighScore" class="high-score-display">Рекорд состояния леса: 0%</div>
+        <div id="victoryHighScore" class="high-score-display">Рекорд посадки леса: 0%</div>
         <p>Посажено деревьев: <span id="finalTreesPlanted">0</span></p>
         <p>Срублено деревьев: <span id="finalTreesChopped">0</span></p>
         <p>Поймано нелегальных лесорубов: <span id="finalLumberjacksCaught">0</span></p>
@@ -1885,7 +1923,7 @@
     <div class="game-over-message" id="gameOverMessage">
         <h2>Игра окончена</h2>
         <p>Все твои деревья были срублены нелегальными лесорубами.</p>
-        <div id="gameOverHighScore" class="high-score-display">Рекорд состояния леса: 0%</div>
+        <div id="gameOverHighScore" class="high-score-display">Рекорд посадки леса: 0%</div>
         <button id="restartButton" style="min-height: 44px;">Начать заново</button>
     </div>
 
@@ -1951,25 +1989,34 @@
                 // На стартовом экране
                 const startScreenHighScore = document.getElementById('startScreenHighScore');
                 if (startScreenHighScore) {
-                    startScreenHighScore.textContent = `Рекорд состояния леса: ${progressRecord}%`;
+                    startScreenHighScore.textContent = `Рекорд посадки леса: ${progressRecord}%`;
                 }
                 
                 // В окне победы
                 const victoryHighScore = document.getElementById('victoryHighScore');
                 if (victoryHighScore) {
-                    victoryHighScore.textContent = `Рекорд состояния леса: ${progressRecord}%`;
+                    victoryHighScore.textContent = `Рекорд посадки леса: ${progressRecord}%`;
                 }
                 
                 // В окне поражения
                 const gameOverHighScore = document.getElementById('gameOverHighScore');
                 if (gameOverHighScore) {
-                    gameOverHighScore.textContent = `Рекорд состояния леса: ${progressRecord}%`;
+                    gameOverHighScore.textContent = `Рекорд посадки леса: ${progressRecord}%`;
                 }
             }
             
             // Инициализируем аудио контекст при первом клике
             function handleFirstInteraction() {
                 initAudioContext();
+                // Запускаем музыку при первом взаимодействии
+                if (musicEnabled && backgroundMusic.paused) {
+                    backgroundMusic.play().catch(e => console.log("Music autoplay prevented"));
+                }
+                
+                // Также предзагружаем внешний звук сруба
+                try {
+                    externalChopSound.load();
+                } catch(e) {}
             }
             
             document.addEventListener('click', handleFirstInteraction, { once: true });
@@ -1982,6 +2029,7 @@
             const plantSpeedAlert = document.getElementById('plantSpeedAlert');
             const growthBoostAlert = document.getElementById('growthBoostAlert');
             const firstLumberjackAlert = document.getElementById('firstLumberjackAlert');
+            const firstTreeGrownAlert = document.getElementById('firstTreeGrownAlert');
             const gameInfo = document.getElementById('gameInfo');
             const levelProgress = document.getElementById('levelProgress');
             const progressBarContainer = document.getElementById('progressBarContainer');
@@ -2114,6 +2162,9 @@
             // Новая переменная для уведомления о первой поимке лесоруба
             let hasShownFirstLumberjackAlert = false;
             
+            // Новая переменная для уведомления о первом выросшем дереве
+            let hasShownFirstTreeGrownAlert = false;
+            
             let scoreFromPreviousLevel = 0;
             let scoreInCurrentLevel = 0;
             
@@ -2121,7 +2172,7 @@
             let totalTreesChopped = 0;
             let totalLumberjacksCaught = 0;
             
-            // Функция для проверки возможности посадки дерева в позиции (УПРОЩЕНО для мобильных устройств)
+            // Функция для проверки возможности посадки дерева в позиции (ИЗМЕНЕНО для мобильных устройств)
             function canPlantAtPosition(x, y) {
                 const riverRect = river.getBoundingClientRect();
                 const fieldRect = gameField.getBoundingClientRect();
@@ -2132,31 +2183,12 @@
                     return false;
                 }
                 
-                // На мобильных устройствах разрешаем сажать деревья ближе
-                if (isMobile) {
-                    // Проверяем только очень близкие деревья (5px)
-                    for (const tree of trees) {
-                        const dx = Math.abs(tree.x - x);
-                        const dy = Math.abs(tree.y - y);
-                        if (dx < 5 && dy < 5) {
-                            return false;
-                        }
-                    }
-                } else {
-                    // Для десктопов оставляем старую проверку (10px)
-                    for (const tree of trees) {
-                        const dx = Math.abs(tree.x - x);
-                        const dy = Math.abs(tree.y - y);
-                        if (dx < 10 && dy < 10) {
-                            return false;
-                        }
-                    }
-                }
-                
+                // Для мобильных устройств разрешаем сажать деревья друг на друге
+                // Убираем проверку расстояния между деревьями
                 return true;
             }
             
-            // Функция для проверки возможности размещения охраны в позиции (УПРОЩЕНО для мобильных устройств)
+            // Функция для проверки возможности размещения охраны в позиции (ИЗМЕНЕНО для мобильных устройств)
             function canPlaceSecurityAtPosition(x, y) {
                 const riverRect = river.getBoundingClientRect();
                 const fieldRect = gameField.getBoundingClientRect();
@@ -2176,7 +2208,71 @@
                     }
                 }
                 
+                // На мобильных устройствах разрешаем ставить охрану на деревья
+                // Убираем проверку на деревья
                 return true;
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Поиск ближайшего свободного места для посадки дерева или охраны
+            function findNearbyPosition(originalX, originalY, isForSecurity = false) {
+                const step = 20; // Шаг поиска в пикселях
+                const maxRadius = 100; // Максимальный радиус поиска
+                
+                // Проверяем исходную позицию
+                if (isForSecurity ? canPlaceSecurityAtPosition(originalX, originalY) : canPlantAtPosition(originalX, originalY)) {
+                    return {x: originalX, y: originalY};
+                }
+                
+                // Ищем по спирали вокруг исходной точки
+                for (let radius = step; radius <= maxRadius; radius += step) {
+                    const points = [];
+                    
+                    // Генерируем точки по кругу
+                    for (let angle = 0; angle < 360; angle += 30) {
+                        const rad = angle * Math.PI / 180;
+                        const x = originalX + Math.cos(rad) * radius;
+                        const y = originalY + Math.sin(rad) * radius;
+                        
+                        // Проверяем, что точка внутри игрового поля
+                        if (x >= 0 && x <= gameField.offsetWidth && y >= 0 && y <= gameField.offsetHeight) {
+                            points.push({x, y});
+                        }
+                    }
+                    
+                    // Перемешиваем точки для более случайного поиска
+                    points.sort(() => Math.random() - 0.5);
+                    
+                    // Проверяем каждую точку
+                    for (const point of points) {
+                        if (isForSecurity ? canPlaceSecurityAtPosition(point.x, point.y) : canPlantAtPosition(point.x, point.y)) {
+                            // Показываем индикатор найденного места
+                            showAutoPlaceIndicator(point.x, point.y);
+                            return point;
+                        }
+                    }
+                }
+                
+                // Если не нашли подходящее место, возвращаем null
+                return null;
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Показать индикатор автоматического размещения
+            function showAutoPlaceIndicator(x, y) {
+                if (!isMobile) return;
+                
+                const indicator = document.createElement('div');
+                indicator.className = 'auto-place-indicator';
+                indicator.style.left = (x - 10) + 'px';
+                indicator.style.top = (y - 10) + 'px';
+                
+                gameField.appendChild(indicator);
+                
+                // Удаляем индикатор через 0.5 секунды
+                setTimeout(() => {
+                    if (indicator.parentNode) {
+                        gameField.removeChild(indicator);
+                    }
+                }, 500);
             }
             
             // Функция для показа уведомления о первой поимке лесоруба
@@ -2188,6 +2284,18 @@
                 
                 setTimeout(() => {
                     firstLumberjackAlert.style.display = 'none';
+                }, 3000);
+            }
+            
+            // Функция для показа уведомления о первом выросшем дереве
+            function showFirstTreeGrownAlert() {
+                if (hasShownFirstTreeGrownAlert) return;
+                
+                firstTreeGrownAlert.style.display = 'block';
+                hasShownFirstTreeGrownAlert = true;
+                
+                setTimeout(() => {
+                    firstTreeGrownAlert.style.display = 'none';
                 }, 3000);
             }
             
@@ -2446,6 +2554,9 @@
                 let touchStartTime = 0;
                 let touchStartX = 0;
                 let touchStartY = 0;
+                let lastTapTime = 0;
+                let lastTapX = 0;
+                let lastTapY = 0;
                 
                 gameField.addEventListener('touchstart', function(event) {
                     if (gamePaused || !gameStarted) return;
@@ -2465,10 +2576,25 @@
                     event.preventDefault();
                     const touchEndTime = Date.now();
                     const touchDuration = touchEndTime - touchStartTime;
+                    const touch = event.changedTouches[0];
+                    
+                    // Проверяем, не является ли это двойным тапом (быстрым повторным нажатием)
+                    const currentTime = Date.now();
+                    const isDoubleTap = (currentTime - lastTapTime < 300) &&
+                                       Math.abs(touch.clientX - lastTapX) < 10 &&
+                                       Math.abs(touch.clientY - lastTapY) < 10;
+                    
+                    lastTapTime = currentTime;
+                    lastTapX = touch.clientX;
+                    lastTapY = touch.clientY;
+                    
+                    // Если это двойной тап, игнорируем его (чтобы избежать случайных срабатываний)
+                    if (isDoubleTap) {
+                        return;
+                    }
                     
                     if (touchDuration < 300) {
                         const rect = gameField.getBoundingClientRect();
-                        const touch = event.changedTouches[0];
                         const x = touch.clientX - rect.left;
                         const y = touch.clientY - rect.top;
                         
@@ -2480,12 +2606,32 @@
                         }
                         
                         if (placingSecurity) {
+                            // Пытаемся поставить охрану в указанное место
                             if (canPlaceSecurityAtPosition(x, y)) {
                                 placeSecurity(x, y);
+                            } else {
+                                // Ищем ближайшее свободное место
+                                const nearbyPos = findNearbyPosition(x, y, true);
+                                if (nearbyPos) {
+                                    // Небольшая задержка для визуальной обратной связи
+                                    setTimeout(() => {
+                                        placeSecurity(nearbyPos.x, nearbyPos.y);
+                                    }, 100);
+                                }
                             }
                         } else if (canPlant) {
+                            // Пытаемся посадить дерево в указанное место
                             if (canPlantAtPosition(x, y)) {
                                 plantTree(x, y);
+                            } else {
+                                // Ищем ближайшее свободное место
+                                const nearbyPos = findNearbyPosition(x, y, false);
+                                if (nearbyPos) {
+                                    // Небольшая задержка для визуальной обратной связи
+                                    setTimeout(() => {
+                                        plantTree(nearbyPos.x, nearbyPos.y);
+                                    }, 100);
+                                }
                             }
                         }
                     }
@@ -2499,6 +2645,11 @@
                 }
                 initAudioContext();
                 playSound('clickSound', 0.2);
+                
+                // Запускаем музыку при старте игры
+                if (musicEnabled) {
+                    backgroundMusic.play().catch(e => console.log("Music play prevented"));
+                }
                 
                 startGame();
                 
@@ -2577,6 +2728,7 @@
                 hasShownWaterSuccessAlert = false;
                 
                 hasShownFirstLumberjackAlert = false;
+                hasShownFirstTreeGrownAlert = false;
                 
                 scoreFromPreviousLevel = 0;
                 scoreInCurrentLevel = 0;
@@ -2610,7 +2762,7 @@
                 
                 displayProgressRecord();
                 
-                const fieldElements = gameField.querySelectorAll('.tree-container, .lumberjack, .security-guard, .security-range, .finger-icon, .score-alert, .water-animation, .water-effect, .empty-bucket-alert, .already-watered-alert, .security-catch');
+                const fieldElements = gameField.querySelectorAll('.tree-container, .lumberjack, .security-guard, .security-range, .finger-icon, .score-alert, .water-animation, .water-effect, .empty-bucket-alert, .already-watered-alert, .security-catch, .auto-place-indicator');
                 fieldElements.forEach(el => {
                     if (el.parentNode) {
                         el.parentNode.removeChild(el);
@@ -3110,6 +3262,11 @@
                 treesGrownThisLevel++;
                 updateLevelProgress();
                 
+                // Показываем уведомление о первом выросшем дереве
+                if (!hasShownFirstTreeGrownAlert) {
+                    showFirstTreeGrownAlert();
+                }
+                
                 addScore(4, treeObj.x, treeObj.y);
                 
                 treeObj.healthBar.style.display = 'block';
@@ -3392,9 +3549,9 @@
             
             function hideFinger(lumberjackObj) {
                 if (lumberjackObj.fingerElement && lumberjackObj.fingerElement.parentNode) {
-                    gameField.removeChild(lumberjackObj.fingerElement);
-                    lumberjackObj.fingerElement = null;
+                    lumberjackObj.fingerElement.remove();
                 }
+                lumberjackObj.fingerElement = null;
             }
             
             function stopLumberjack(lumberjackObj) {
@@ -3447,8 +3604,9 @@
                     lumberjackObj.securityDamageInterval = null;
                 }
                 
-                lumberjacksCaughtThisLevel += 0.25;
-                totalLumberjacksCaught += 0.25;
+                // Исправлено: теперь добавляем целое число
+                lumberjacksCaughtThisLevel += 1;
+                totalLumberjacksCaught += 1;
                 updateLevelProgress();
                 
                 playSound('catchLumberjackSound', 0.4);
@@ -3735,6 +3893,7 @@
                 
                 if (!trees.includes(tree)) return;
                 
+                // Воспроизводим звук сруба дерева
                 playSound('chopTreeSound', 0.7);
                 
                 showChoppedAlert();
@@ -3814,7 +3973,7 @@
                     maxProgressInSession = progress;
                 }
                 
-                if (progress > 70) {
+                if (progress > 50) {
                     progressBar.style.backgroundColor = '#4CAF50';
                 } else if (progress > 30) {
                     progressBar.style.backgroundColor = '#FFC107';
@@ -3903,7 +4062,7 @@
                 
                 const progress = (treeCount / totalPlanted) * 100;
                 
-                if (progress > 70) {
+                if (progress > 50) {
                     return "Ты посадил прекрасный лес! 🌳🌲🎄";
                 } else if (progress > 30) {
                     return "Твой лес сильно пострадал, но ты справился! 🌳🍃";
@@ -3917,13 +4076,19 @@
                 gamePaused = true;
                 finalScoreElement.textContent = Math.round(score * 10) / 10;
                 
+                // Исправлено: теперь отображаем целое число
+                finalLumberjacksCaught.textContent = Math.round(totalLumberjacksCaught);
+                
                 updateProgressRecord(Math.round(maxProgressInSession));
                 
                 playSound('victorySound', 0.6);
                 
+                // Останавливаем музыку при победе
+                backgroundMusic.pause();
+                backgroundMusic.currentTime = 0;
+                
                 finalTreesPlanted.textContent = totalTreesPlanted;
                 finalTreesChopped.textContent = totalTreesChopped;
-                finalLumberjacksCaught.textContent = Math.round(totalLumberjacksCaught * 10) / 10;
                 
                 victoryMessageText.textContent = getForestStateMessage();
                 
@@ -3934,6 +4099,9 @@
                 pausedOverlay.style.display = 'flex';
                 
                 clearIntervals();
+                
+                // Скрываем все пальцы при победе
+                hideAllFingers();
             }
             
             function showGameOver() {
@@ -3941,9 +4109,16 @@
                 
                 displayProgressRecord();
                 
+                // Останавливаем музыку при поражении
+                backgroundMusic.pause();
+                backgroundMusic.currentTime = 0;
+                
                 gameOverMessage.style.display = 'block';
                 
                 clearIntervals();
+                
+                // Скрываем все пальцы при поражении
+                hideAllFingers();
             }
             
             function clearIntervals() {
@@ -4019,6 +4194,11 @@
                         }
                     });
                     
+                    // Приостанавливаем музыку при паузе
+                    if (musicEnabled) {
+                        backgroundMusic.pause();
+                    }
+                    
                     pausedOverlay.style.display = 'flex';
                     pauseButton.textContent = 'Продолжить';
                     if (mobilePauseButton) {
@@ -4054,6 +4234,11 @@
                             }
                         }
                     });
+                    
+                    // Возобновляем музыку при снятии паузы
+                    if (musicEnabled && backgroundMusic.paused) {
+                        backgroundMusic.play().catch(e => console.log("Music play prevented"));
+                    }
                     
                     pausedOverlay.style.display = 'none';
                     pauseButton.textContent = 'Пауза';
@@ -4304,7 +4489,9 @@
                     if (musicEnabled) {
                         try {
                             backgroundMusic.volume = 0.3;
-                            backgroundMusic.play().catch(e => {});
+                            if (gameStarted && !gamePaused) {
+                                backgroundMusic.play().catch(e => console.log("Music play prevented"));
+                            }
                         } catch(e) {}
                     } else {
                         backgroundMusic.pause();
@@ -4338,15 +4525,6 @@
                 }
             }
             
-            function playBackgroundMusicFunc() {
-                if (!musicEnabled || gamePaused) return;
-                
-                try {
-                    backgroundMusic.volume = 0.3;
-                    backgroundMusic.play().catch(e => {});
-                } catch(e) {}
-            }
-            
             function playChopSound(volume = 0.7) {
                 if (!soundsEnabled || gamePaused) return;
                 
@@ -4363,7 +4541,24 @@
                 initAudioContext();
                 
                 if (soundName === 'chopTreeSound') {
-                    playChopSound(volume);
+                    // Пробуем Web Audio API сначала
+                    try {
+                        if (window.chopTreeSoundPlay) {
+                            window.chopTreeSoundPlay();
+                        } else {
+                            // Fallback на externalChopSound
+                            externalChopSound.currentTime = 0;
+                            externalChopSound.volume = volume;
+                            externalChopSound.play().catch(e => {});
+                        }
+                    } catch(e) {
+                        // Если Web Audio API не сработал, пробуем externalChopSound
+                        try {
+                            externalChopSound.currentTime = 0;
+                            externalChopSound.volume = volume;
+                            externalChopSound.play().catch(e => {});
+                        } catch(e2) {}
+                    }
                     return;
                 }
                 
@@ -4387,6 +4582,9 @@
                 createVictorySound('victorySound');
                 createClickSound('clickSound');
                 createRoarSound('securityPlaceSound');
+                
+                // Добавляем звук сруба дерева
+                createChopSound('chopTreeSound');
             }
             
             function createToneSound(elementId, frequency, duration, volume) {
@@ -4722,6 +4920,66 @@
                 };
             }
             
+            // Добавляем новую функцию для создания звука сруба дерева
+            function createChopSound(elementId) {
+                window[elementId + 'Play'] = function() {
+                    if (!audioContextInitialized) return;
+                    try {
+                        // Создаем низкочастотный звук для удара топора
+                        const oscillator1 = audioContext.createOscillator();
+                        const oscillator2 = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator1.connect(gainNode);
+                        oscillator2.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator1.frequency.value = 150; // Низкая частота для удара
+                        oscillator2.frequency.value = 300; // Средняя частота
+                        oscillator1.type = 'sawtooth';
+                        oscillator2.type = 'sine';
+                        
+                        gainNode.gain.value = 0.4;
+                        
+                        oscillator1.start();
+                        oscillator2.start();
+                        
+                        // Быстрое затухание для имитации удара
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+                        
+                        setTimeout(() => {
+                            oscillator1.stop();
+                            oscillator2.stop();
+                        }, 300);
+                        
+                        // Добавляем второй, более высокий звук для падения дерева
+                        setTimeout(() => {
+                            const oscillator3 = audioContext.createOscillator();
+                            const gainNode2 = audioContext.createGain();
+                            
+                            oscillator3.connect(gainNode2);
+                            gainNode2.connect(audioContext.destination);
+                            
+                            oscillator3.frequency.value = 100;
+                            oscillator3.type = 'sine';
+                            
+                            gainNode2.gain.value = 0.3;
+                            
+                            oscillator3.start();
+                            
+                            // Медленное затухание для падения
+                            gainNode2.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5);
+                            
+                            setTimeout(() => {
+                                oscillator3.stop();
+                            }, 500);
+                        }, 200);
+                    } catch(e) {
+                        console.error("Error creating chop sound:", e);
+                    }
+                };
+            }
+            
             function addButtonClickSounds() {
                 const buttons = document.querySelectorAll('button');
                 buttons.forEach(button => {
@@ -4813,12 +5071,6 @@
                 updateLevelProgress();
                 updateShopButtons();
                 updateCursor();
-                
-                setTimeout(() => {
-                    if (musicEnabled) {
-                        playBackgroundMusicFunc();
-                    }
-                }, 1000);
             }
             
             initGame();
