@@ -1862,11 +1862,11 @@
             <div class="game-field" id="gameField">
                 <div class="upgrade-alert upgrade-alert-faster-plant" id="plantSpeedAlert">Деревья садятся теперь быстрее</div>
                 <div class="upgrade-alert upgrade-alert-faster-grow" id="growthBoostAlert">Деревья растут теперь быстрее</div>
-                <div class="first-lumberjack-alert" id="firstLumberjackAlert">Убеди как можно больше нелегальных лесорубов</div>
-                <!-- <div class="first-tree-grown-alert" id="firstTreeGrownAlert">Посади много деревьев ❤️</div> -->
+                <div class="first-lumberjack-alert" id="firstLumberjackAlert">Поймай как можно больше нелегальных лесорубов</div>
+                <div class="first-tree-grown-alert" id="firstTreeGrownAlert">Теперь посади как можно больше деревьев...</div>
                 
                 <!-- Новые уведомления -->
-                <div class="first-lumberjack-warning" id="firstLumberjackWarning">Убеди нелегального лесоруба в важности леса для жизни</div>
+                <div class="first-lumberjack-warning" id="firstLumberjackWarning">Убеди нелегального лесоруба в том что лес необходимый для жизни</div>
                 <div class="level-two-shop-alert" id="levelTwoShopAlert">Сходи в магазин улучшений и посмотри что там есть</div>
                 
                 <div class="start-screen" id="startScreen">
@@ -1881,13 +1881,13 @@
                 <div class="river" id="river">🌊 Речка - набери воды</div>
                 <div class="start-timer" id="startTimer">
                     <div>10</div>
-                    <div class="plant-first-tree">Посади первое дерево ❤️</div>
+                    <div class="plant-first-tree">Посади первое дерево</div>
                 </div>
                 <div class="paused-overlay" id="pausedOverlay">ПАУЗА</div>
                 <div class="place-security-alert" id="placeSecurityAlert">Выбери место для охраны</div>
                 <div class="water-instruction-alert" id="waterInstructionAlert">Нажми на речку, набери воды</div>
-                <div class="water-first-alert" id="waterFirstAlert">Нажми на молодое дерево, чтобы полить его</div>
-                <div class="water-success-alert" id="waterSuccessAlert">Дерево растёт теперь быстрее ❤️ <br><br> Посади как можно больше деревьев ❤️</div>
+                <div class="water-first-alert" id="waterFirstAlert">Теперь нажми на молодое дерево, чтобы полить его</div>
+                <div class="water-success-alert" id="waterSuccessAlert">Дерево растёт теперь быстрее</div>
                 <div class="chopped-alert" id="choppedAlert">Нелегальный лесоруб срубил дерево</div>
             </div>
             
@@ -2019,34 +2019,58 @@
                 progressRecord = 0;
             }
             
-            // Функция для обновления рекорда
-            function updateProgressRecord(newProgress) {
-                if (newProgress > progressRecord) {
-                    progressRecord = newProgress;
+            // Функция для корректного обновления рекорда
+            function updateProgressRecordCorrectly() {
+                const totalPlanted = treeCount + choppedCount;
+                if (totalPlanted === 0) {
+                    // Если еще нет деревьев, прогресс 0
+                    if (0 > progressRecord) {
+                        progressRecord = 0;
+                        try {
+                            localStorage.setItem('plantForestProgressRecord', '0');
+                        } catch(e) {}
+                    }
+                    return;
+                }
+                
+                // Рассчитываем текущий процент выживших деревьев
+                const currentProgress = (treeCount / totalPlanted) * 100;
+                
+                // Обновляем максимальный прогресс в сессии
+                if (currentProgress > maxProgressInSession) {
+                    maxProgressInSession = currentProgress;
+                }
+                
+                // Обновляем рекорд, если текущий прогресс больше
+                if (currentProgress > progressRecord) {
+                    progressRecord = currentProgress;
                     try {
-                        localStorage.setItem('plantForestProgressRecord', progressRecord.toString());
+                        localStorage.setItem('plantForestProgressRecord', Math.round(progressRecord).toString());
                     } catch(e) {}
+                    
+                    // Обновляем отображение рекорда
+                    displayProgressRecord();
                 }
             }
             
-            // Функция для отображения рекорда
+            // Функция для отображения рекорда (исправленная)
             function displayProgressRecord() {
                 // На стартовом экране
                 const startScreenHighScore = document.getElementById('startScreenHighScore');
                 if (startScreenHighScore) {
-                    startScreenHighScore.textContent = `Рекорд посадки леса: ${progressRecord}%`;
+                    startScreenHighScore.textContent = `Рекорд посадки леса: ${Math.round(progressRecord)}%`;
                 }
                 
                 // В окне победы
                 const victoryHighScore = document.getElementById('victoryHighScore');
                 if (victoryHighScore) {
-                    victoryHighScore.textContent = `Рекорд посадки леса: ${progressRecord}%`;
+                    victoryHighScore.textContent = `Рекорд посадки леса: ${Math.round(progressRecord)}%`;
                 }
                 
                 // В окне поражения
                 const gameOverHighScore = document.getElementById('gameOverHighScore');
                 if (gameOverHighScore) {
-                    gameOverHighScore.textContent = `Рекорд посадки леса: ${progressRecord}%`;
+                    gameOverHighScore.textContent = `Рекорд посадки леса: ${Math.round(progressRecord)}%`;
                 }
             }
             
@@ -2225,7 +2249,7 @@
             let totalTreesChopped = 0;
             let totalLumberjacksCaught = 0;
             
-            // Функция для проверки возможности посадки дерева в позиции (ИЗМЕНЕНО для мобильных устройств)
+            // Функция для проверки возможности посадки дерева в позиции (ИЗМЕНЕНО для разрешения посадки впритык)
             function canPlantAtPosition(x, y) {
                 const riverRect = river.getBoundingClientRect();
                 const fieldRect = gameField.getBoundingClientRect();
@@ -2236,18 +2260,26 @@
                     return false;
                 }
                 
-                // Для мобильных устройств разрешаем сажать деревья близко друг к другу, но не на том же месте
+                // Проверяем, не находится ли точка нажатия прямо на существующем дереве
                 for (const tree of trees) {
                     const dx = Math.abs(tree.x - x);
                     const dy = Math.abs(tree.y - y);
                     
-                    // На мобильных устройствах пропускаем проверку для взрослых деревьев
-                    if (isMobile && tree.grown) {
-                        continue; // Пропускаем взрослые деревья
+                    // Уменьшаем радиус проверки для мобильных устройств и взрослых деревьев
+                    let checkRadius;
+                    if (isMobile) {
+                        if (tree.grown) {
+                            // На мобильных: взрослые деревья - очень маленький радиус
+                            checkRadius = 5;
+                        } else {
+                            // Молодые деревья - чуть больше
+                            checkRadius = 8;
+                        }
+                    } else {
+                        // На десктопе: стандартный радиус
+                        checkRadius = 15;
                     }
                     
-                    // Проверяем, не находится ли точка нажатия прямо на существующем дереве
-                    const checkRadius = isMobile ? 10 : 15;
                     if (dx < checkRadius && dy < checkRadius) {
                         return false;
                     }
@@ -2311,7 +2343,7 @@
                         for (const tree of trees) {
                             const dx = Math.abs(tree.x - newX);
                             const dy = Math.abs(tree.y - newY);
-                            const checkRadius = isMobile ? 10 : 15;
+                            const checkRadius = isMobile ? 8 : 15;
                             if (dx < checkRadius && dy < checkRadius) {
                                 tooClose = true;
                                 break;
@@ -2402,17 +2434,27 @@
                     return false;
                 }
                 
-                // Проверяем только очень близкую охрану (15px)
+                // Проверяем только очень близкую охрану (10px для мобильных, 15px для десктопа)
+                const guardRadius = isMobile ? 10 : 15;
                 for (const guard of securityGuards) {
                     const dx = Math.abs(guard.x - x);
                     const dy = Math.abs(guard.y - y);
-                    if (dx < 15 && dy < 15) {
+                    if (dx < guardRadius && dy < guardRadius) {
                         return false;
                     }
                 }
                 
-                // На мобильных устройствах разрешаем ставить охрану на деревья
-                // Убираем проверку на деревья
+                // На мобильных устройствах разрешаем ставить охрану очень близко к деревьям
+                // На десктопе оставляем стандартную проверку
+                const treeRadius = isMobile ? 3 : 15;
+                for (const tree of trees) {
+                    const dx = Math.abs(tree.x - x);
+                    const dy = Math.abs(tree.y - y);
+                    if (dx < treeRadius && dy < treeRadius) {
+                        return false;
+                    }
+                }
+                
                 return true;
             }
             
@@ -2457,6 +2499,48 @@
                 
                 // Если не нашли подходящее место, возвращаем null
                 return null;
+            }
+            
+            // Улучшенная функция поиска места для охраны в густых лесах
+            function findSecuritySpotInDenseForest(originalX, originalY) {
+                const step = 10; // Уменьшенный шаг для более точного поиска
+                const maxRadius = 80; // Уменьшенный радиус поиска
+                
+                // Проверяем исходную позицию
+                if (canPlaceSecurityAtPosition(originalX, originalY)) {
+                    return {x: originalX, y: originalY};
+                }
+                
+                // Пробуем позиции в небольшом радиусе от деревьев
+                for (const tree of trees) {
+                    // Пробуем позиции вокруг дерева
+                    const directions = [
+                        { dx: 25, dy: 0 },   // справа
+                        { dx: -25, dy: 0 },  // слева
+                        { dx: 0, dy: 25 },   // снизу
+                        { dx: 0, dy: -25 },  // сверху
+                        { dx: 18, dy: 18 },  // справа-снизу
+                        { dx: -18, dy: 18 }, // слева-снизу
+                        { dx: 18, dy: -18 }, // справа-сверху
+                        { dx: -18, dy: -18 } // слева-сверху
+                    ];
+                    
+                    for (const dir of directions) {
+                        const x = tree.x + dir.dx;
+                        const y = tree.y + dir.dy;
+                        
+                        // Проверяем границы поля
+                        if (x >= 0 && x <= gameField.offsetWidth && y >= 0 && y <= gameField.offsetHeight - 60) {
+                            if (canPlaceSecurityAtPosition(x, y)) {
+                                showAutoPlaceIndicator(x, y);
+                                return {x, y};
+                            }
+                        }
+                    }
+                }
+                
+                // Если не нашли возле деревьев, используем спиральный поиск
+                return findNearbyPosition(originalX, originalY, true);
             }
             
             // НОВАЯ ФУНКЦИЯ: Показать индикатор автоматического размещения
@@ -2833,18 +2917,13 @@
                         }
                         
                         if (placingSecurity) {
-                            // Пытаемся поставить охрану в указанное место
-                            if (canPlaceSecurityAtPosition(x, y)) {
-                                placeSecurity(x, y);
-                            } else {
-                                // Ищем ближайшее свободное место
-                                const nearbyPos = findNearbyPosition(x, y, true);
-                                if (nearbyPos) {
-                                    // Небольшая задержка для визуальной обратной связи
-                                    setTimeout(() => {
-                                        placeSecurity(nearbyPos.x, nearbyPos.y);
-                                    }, 100);
-                                }
+                            // Используем улучшенный поиск для охраны
+                            const nearbyPos = findSecuritySpotInDenseForest(x, y);
+                            if (nearbyPos) {
+                                // Небольшая задержка для визуальной обратной связи
+                                setTimeout(() => {
+                                    placeSecurity(nearbyPos.x, nearbyPos.y);
+                                }, 100);
                             }
                         } else if (canPlant) {
                             // НОВАЯ ЛОГИКА: Проверяем, не нажали ли на существующее дерево
@@ -4222,15 +4301,15 @@
                 const totalPlanted = treeCount + choppedCount;
                 if (totalPlanted === 0) {
                     progressBar.style.width = '0%';
+                    updateProgressRecordCorrectly();
                     return;
                 }
                 
                 const progress = (treeCount / totalPlanted) * 100;
                 progressBar.style.width = progress + '%';
                 
-                if (progress > maxProgressInSession) {
-                    maxProgressInSession = progress;
-                }
+                // Вызываем обновление рекорда
+                updateProgressRecordCorrectly();
                 
                 if (progress > 50) {
                     progressBar.style.backgroundColor = '#4CAF50';
@@ -4343,7 +4422,8 @@
                 // Исправлено: теперь отображаем целое число
                 finalLumberjacksCaught.textContent = Math.round(totalLumberjacksCaught);
                 
-                updateProgressRecord(Math.round(maxProgressInSession));
+                // Обновляем рекорд перед отображением
+                updateProgressRecordCorrectly();
                 
                 playSound('victorySound', 0.6);
                 
