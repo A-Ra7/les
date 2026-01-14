@@ -541,7 +541,7 @@
         }
         
         .tree-types-info {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255,255, 0.9);
             border-radius: 8px;
             padding: 12px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
@@ -1388,6 +1388,47 @@
             }
         }
         
+        /* Новые стили для уведомлений */
+        .first-lumberjack-warning {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #FF9800, #FF5722);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 5s ease-in-out;
+            max-width: 90%;
+            line-height: 1.4;
+        }
+        
+        .level-two-shop-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #4CAF50, #2E7D32);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 5s ease-in-out;
+            max-width: 90%;
+            line-height: 1.4;
+        }
+        
         @media (max-width: 480px) {
             .container h1 {
                 margin-top: 70px;
@@ -1821,8 +1862,12 @@
             <div class="game-field" id="gameField">
                 <div class="upgrade-alert upgrade-alert-faster-plant" id="plantSpeedAlert">Деревья садятся теперь быстрее</div>
                 <div class="upgrade-alert upgrade-alert-faster-grow" id="growthBoostAlert">Деревья растут теперь быстрее</div>
-                <div class="first-lumberjack-alert" id="firstLumberjackAlert">Поймай как можно больше нелегальных лесорубов</div>
-                <div class="first-tree-grown-alert" id="firstTreeGrownAlert">Теперь посади как можно больше деревьев...</div>
+                <div class="first-lumberjack-alert" id="firstLumberjackAlert">Убеди как можно больше нелегальных лесорубов</div>
+                <!-- <div class="first-tree-grown-alert" id="firstTreeGrownAlert">Посади много деревьев ❤️</div> -->
+                
+                <!-- Новые уведомления -->
+                <div class="first-lumberjack-warning" id="firstLumberjackWarning">Убеди нелегального лесоруба в важности леса для жизни</div>
+                <div class="level-two-shop-alert" id="levelTwoShopAlert">Сходи в магазин улучшений и посмотри что там есть</div>
                 
                 <div class="start-screen" id="startScreen">
                     <h2>Посади Лес</h2>
@@ -1836,13 +1881,13 @@
                 <div class="river" id="river">🌊 Речка - набери воды</div>
                 <div class="start-timer" id="startTimer">
                     <div>10</div>
-                    <div class="plant-first-tree">Посади первое дерево</div>
+                    <div class="plant-first-tree">Посади первое дерево ❤️</div>
                 </div>
                 <div class="paused-overlay" id="pausedOverlay">ПАУЗА</div>
                 <div class="place-security-alert" id="placeSecurityAlert">Выбери место для охраны</div>
                 <div class="water-instruction-alert" id="waterInstructionAlert">Нажми на речку, набери воды</div>
-                <div class="water-first-alert" id="waterFirstAlert">Теперь нажми на молодое дерево, чтобы полить его</div>
-                <div class="water-success-alert" id="waterSuccessAlert">Дерево растёт теперь быстрее</div>
+                <div class="water-first-alert" id="waterFirstAlert">Нажми на молодое дерево, чтобы полить его</div>
+                <div class="water-success-alert" id="waterSuccessAlert">Дерево растёт теперь быстрее ❤️ <br><br> Посади как можно больше деревьев ❤️</div>
                 <div class="chopped-alert" id="choppedAlert">Нелегальный лесоруб срубил дерево</div>
             </div>
             
@@ -2034,6 +2079,10 @@
             const levelProgress = document.getElementById('levelProgress');
             const progressBarContainer = document.getElementById('progressBarContainer');
             
+            // Новые элементы уведомлений
+            const firstLumberjackWarning = document.getElementById('firstLumberjackWarning');
+            const levelTwoShopAlert = document.getElementById('levelTwoShopAlert');
+            
             document.querySelectorAll('button, .river, .tree-hitbox, .lumberjack-hitbox').forEach(el => {
                 el.style.touchAction = 'manipulation';
             });
@@ -2165,6 +2214,10 @@
             // Новая переменная для уведомления о первом выросшем дереве
             let hasShownFirstTreeGrownAlert = false;
             
+            // Новые переменные для уведомлений
+            let hasShownFirstLumberjackWarning = false;
+            let hasShownLevelTwoShopAlert = false;
+            
             let scoreFromPreviousLevel = 0;
             let scoreInCurrentLevel = 0;
             
@@ -2183,8 +2236,158 @@
                     return false;
                 }
                 
-                // Для мобильных устройств разрешаем сажать деревья друг на друге
-                // Убираем проверку расстояния между деревьями
+                // Для мобильных устройств разрешаем сажать деревья близко друг к другу, но не на том же месте
+                for (const tree of trees) {
+                    const dx = Math.abs(tree.x - x);
+                    const dy = Math.abs(tree.y - y);
+                    
+                    // На мобильных устройствах пропускаем проверку для взрослых деревьев
+                    if (isMobile && tree.grown) {
+                        continue; // Пропускаем взрослые деревья
+                    }
+                    
+                    // Проверяем, не находится ли точка нажатия прямо на существующем дереве
+                    const checkRadius = isMobile ? 10 : 15;
+                    if (dx < checkRadius && dy < checkRadius) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Проверка, находится ли точка нажатия на существующем дереве
+            function isOnExistingTree(x, y) {
+                for (const tree of trees) {
+                    const dx = Math.abs(tree.x - x);
+                    const dy = Math.abs(tree.y - y);
+                    // Проверяем, находится ли точка нажатия прямо на существующем дереве
+                    const checkRadius = isMobile ? 25 : 20;
+                    if (dx < checkRadius && dy < checkRadius) {
+                        return tree;
+                    }
+                }
+                return null;
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Найти свободное место рядом с существующим деревом
+            function findSpotNearTree(existingTree, x, y) {
+                const directions = [
+                    { dx: 35, dy: 0 },   // справа
+                    { dx: -35, dy: 0 },  // слева
+                    { dx: 0, dy: 35 },   // снизу
+                    { dx: 0, dy: -35 },  // сверху
+                    { dx: 25, dy: 25 },  // справа-снизу
+                    { dx: -25, dy: 25 }, // слева-снизу
+                    { dx: 25, dy: -25 }, // справа-сверху
+                    { dx: -25, dy: -25 } // слева-сверху
+                ];
+                
+                // Сначала проверяем точку нажатия
+                if (canPlantAtPosition(x, y)) {
+                    return {x: x, y: y};
+                }
+                
+                // Пытаемся найти свободное место вокруг существующего дерева
+                for (const dir of directions) {
+                    const newX = existingTree.x + dir.dx;
+                    const newY = existingTree.y + dir.dy;
+                    
+                    // Проверяем, что место находится в пределах игрового поля
+                    if (newX >= 20 && newX <= gameField.offsetWidth - 20 &&
+                        newY >= 20 && newY <= gameField.offsetHeight - 60) {
+                        
+                        // Проверяем реку
+                        const riverRect = river.getBoundingClientRect();
+                        const fieldRect = gameField.getBoundingClientRect();
+                        const relativeRiverTop = riverRect.top - fieldRect.top;
+                        
+                        if (newY > relativeRiverTop - 3) {
+                            continue;
+                        }
+                        
+                        // Проверяем другие деревья
+                        let tooClose = false;
+                        for (const tree of trees) {
+                            const dx = Math.abs(tree.x - newX);
+                            const dy = Math.abs(tree.y - newY);
+                            const checkRadius = isMobile ? 10 : 15;
+                            if (dx < checkRadius && dy < checkRadius) {
+                                tooClose = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!tooClose) {
+                            return {x: newX, y: newY};
+                        }
+                    }
+                }
+                
+                // Если не нашли рядом, пробуем спиральный поиск
+                return findNearbyPosition(x, y, false);
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Поиск места для посадки на мобильных устройствах с учетом взрослых деревьев
+            function findSpotForMobile(existingTree, x, y) {
+                // Если дерево взрослое, позволяем посадить новое прямо на него или рядом
+                if (existingTree.grown) {
+                    // Проверяем точку нажатия (прямо на взрослое дерево)
+                    if (canPlantAtPositionWithOverride(x, y, true)) {
+                        return {x: x, y: y};
+                    }
+                    
+                    // Ищем очень близко к взрослому дереву
+                    const directions = [
+                        { dx: 20, dy: 0 },   // справа
+                        { dx: -20, dy: 0 },  // слева
+                        { dx: 0, dy: 20 },   // снизу
+                        { dx: 0, dy: -20 },  // сверху
+                        { dx: 15, dy: 15 },  // справа-снизу
+                        { dx: -15, dy: 15 }, // слева-снизу
+                        { dx: 15, dy: -15 }, // справа-сверху
+                        { dx: -15, dy: -15 } // слева-сверху
+                    ];
+                    
+                    for (const dir of directions) {
+                        const newX = existingTree.x + dir.dx;
+                        const newY = existingTree.y + dir.dy;
+                        
+                        if (canPlantAtPositionWithOverride(newX, newY, true)) {
+                            return {x: newX, y: newY};
+                        }
+                    }
+                }
+                
+                // Если не нашли, используем старую логику
+                return findSpotNearTree(existingTree, x, y);
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Проверка возможности посадки с игнорированием взрослых деревьев
+            function canPlantAtPositionWithOverride(x, y, ignoreGrownTrees = false) {
+                const riverRect = river.getBoundingClientRect();
+                const fieldRect = gameField.getBoundingClientRect();
+                const relativeRiverTop = riverRect.top - fieldRect.top;
+                
+                if (y > relativeRiverTop - 3) {
+                    return false;
+                }
+                
+                for (const tree of trees) {
+                    const dx = Math.abs(tree.x - x);
+                    const dy = Math.abs(tree.y - y);
+                    
+                    // Игнорируем взрослые деревья если нужно
+                    if (ignoreGrownTrees && tree.grown) {
+                        continue;
+                    }
+                    
+                    const checkRadius = isMobile ? 8 : 15;
+                    if (dx < checkRadius && dy < checkRadius) {
+                        return false;
+                    }
+                }
+                
                 return true;
             }
             
@@ -2297,6 +2500,30 @@
                 setTimeout(() => {
                     firstTreeGrownAlert.style.display = 'none';
                 }, 3000);
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Показать уведомление о первом лесорубе
+            function showFirstLumberjackWarning() {
+                if (hasShownFirstLumberjackWarning) return;
+                
+                firstLumberjackWarning.style.display = 'block';
+                hasShownFirstLumberjackWarning = true;
+                
+                setTimeout(() => {
+                    firstLumberjackWarning.style.display = 'none';
+                }, 5000);
+            }
+            
+            // НОВАЯ ФУНКЦИЯ: Показать уведомление о магазине на 2 уровне
+            function showLevelTwoShopAlertMessage() {
+                if (hasShownLevelTwoShopAlert) return;
+                
+                levelTwoShopAlert.style.display = 'block';
+                hasShownLevelTwoShopAlert = true;
+                
+                setTimeout(() => {
+                    levelTwoShopAlert.style.display = 'none';
+                }, 5000);
             }
             
             function setupLumberjackHoverEffects() {
@@ -2620,17 +2847,40 @@
                                 }
                             }
                         } else if (canPlant) {
-                            // Пытаемся посадить дерево в указанное место
-                            if (canPlantAtPosition(x, y)) {
-                                plantTree(x, y);
-                            } else {
-                                // Ищем ближайшее свободное место
-                                const nearbyPos = findNearbyPosition(x, y, false);
-                                if (nearbyPos) {
+                            // НОВАЯ ЛОГИКА: Проверяем, не нажали ли на существующее дерево
+                            const existingTree = isOnExistingTree(x, y);
+                            
+                            if (existingTree) {
+                                // Если нажали на существующее дерево, ищем место рядом с ним
+                                let nearbySpot;
+                                if (isMobile) {
+                                    nearbySpot = findSpotForMobile(existingTree, x, y);
+                                } else {
+                                    nearbySpot = findSpotNearTree(existingTree, x, y);
+                                }
+                                
+                                if (nearbySpot) {
+                                    // Показываем индикатор, что дерево будет посажено рядом
+                                    showAutoPlaceIndicator(nearbySpot.x, nearbySpot.y);
+                                    
                                     // Небольшая задержка для визуальной обратной связи
                                     setTimeout(() => {
-                                        plantTree(nearbyPos.x, nearbyPos.y);
+                                        plantTree(nearbySpot.x, nearbySpot.y);
                                     }, 100);
+                                }
+                            } else {
+                                // Если не нажали на существующее дерево, проверяем обычным способом
+                                if (canPlantAtPosition(x, y)) {
+                                    plantTree(x, y);
+                                } else {
+                                    // Ищем ближайшее свободное место
+                                    const nearbyPos = findNearbyPosition(x, y, false);
+                                    if (nearbyPos) {
+                                        // Небольшая задержка для визуальной обратной связи
+                                        setTimeout(() => {
+                                            plantTree(nearbyPos.x, nearbyPos.y);
+                                        }, 100);
+                                    }
                                 }
                             }
                         }
@@ -2729,6 +2979,10 @@
                 
                 hasShownFirstLumberjackAlert = false;
                 hasShownFirstTreeGrownAlert = false;
+                
+                // Сброс новых флагов уведомлений
+                hasShownFirstLumberjackWarning = false;
+                hasShownLevelTwoShopAlert = false;
                 
                 scoreFromPreviousLevel = 0;
                 scoreInCurrentLevel = 0;
@@ -3507,6 +3761,11 @@
                 
                 updateLumberjackArmorBar(lumberjackObj);
                 
+                // Показываем уведомление о первом лесорубе
+                if (lumberjacks.length === 1 && !hasShownFirstLumberjackWarning) {
+                    showFirstLumberjackWarning();
+                }
+                
                 lumberjackHitbox.addEventListener('click', function(event) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -3989,11 +4248,8 @@
                     
                     playSound('levelUpSound', 0.6);
                     
+                    // ИСПРАВЛЕНО: убрана автоматическая пауза на 12 уровне
                     if (level > MAX_LEVEL) {
-                        gamePaused = true;
-                        pausedOverlay.style.display = 'flex';
-                        pauseButton.textContent = 'Продолжить';
-                        
                         showVictory();
                         return;
                     }
@@ -4018,6 +4274,9 @@
                     
                     removeAllLumberjacks();
                     
+                    // ДОБАВЛЕНО: очистка всех пальцев при переходе на новый уровень
+                    hideAllFingers();
+                    
                     levelElement.textContent = level;
                     
                     updateLevelProgress();
@@ -4032,6 +4291,11 @@
                     startLumberjackTimer();
                     
                     updateShopButtons();
+                    
+                    // Показываем уведомление о магазине на 2 уровне
+                    if (level === 2 && !hasShownLevelTwoShopAlert) {
+                        showLevelTwoShopAlertMessage();
+                    }
                 }
             }
             
@@ -4096,7 +4360,8 @@
                 
                 victoryMessage.style.display = 'block';
                 
-                pausedOverlay.style.display = 'flex';
+                // ИСПРАВЛЕНО: убираем автоматическое отображение паузы при победе
+                pausedOverlay.style.display = 'none';
                 
                 clearIntervals();
                 
