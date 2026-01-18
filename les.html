@@ -245,8 +245,8 @@
         
         .lumberjack-hitbox {
             position: absolute;
-            width: 60px;
-            height: 60px;
+            width: 120px;
+            height: 120px;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -1429,6 +1429,26 @@
             line-height: 1.4;
         }
         
+        .level-ten-alert {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to right, #FF9800, #FF5722);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            text-align: center;
+            animation: fadeInOut 5s ease-in-out;
+            max-width: 90%;
+            line-height: 1.4;
+        }
+        
         @media (max-width: 480px) {
             .container h1 {
                 margin-top: 70px;
@@ -1863,6 +1883,7 @@
                 <div class="upgrade-alert upgrade-alert-faster-plant" id="plantSpeedAlert">Деревья садятся теперь быстрее</div>
                 <div class="upgrade-alert upgrade-alert-faster-grow" id="growthBoostAlert">Деревья растут теперь быстрее</div>
                 <div class="first-lumberjack-alert" id="firstLumberjackAlert">Убеди как можно больше лесорубов</div>
+                <div class="level-ten-alert" id="levelTenAlert">Расставь больше охраны чтобы защитить свой лес</div>
                 
                 <div class="first-lumberjack-warning" id="firstLumberjackWarning">Убеди лесоруба в важности леса для жизни</div>
                 <div class="level-two-shop-alert" id="levelTwoShopAlert">Сходи в магазин улучшений и посмотри что там есть</div>
@@ -2097,6 +2118,7 @@
             const growthBoostAlert = document.getElementById('growthBoostAlert');
             const firstLumberjackAlert = document.getElementById('firstLumberjackAlert');
             const firstTreeGrownAlert = document.getElementById('firstTreeGrownAlert');
+            const levelTenAlert = document.getElementById('levelTenAlert');
             const gameInfo = document.getElementById('gameInfo');
             const levelProgress = document.getElementById('levelProgress');
             const progressBarContainer = document.getElementById('progressBarContainer');
@@ -2240,6 +2262,9 @@
             let hasShownFirstLumberjackWarning = false;
             let hasShownLevelTwoShopAlert = false;
             
+            // Новая переменная для уведомления 10 уровня
+            let hasShownLevelTenAlert = false;
+            
             let scoreFromPreviousLevel = 0;
             let scoreInCurrentLevel = 0;
             
@@ -2327,6 +2352,18 @@
                         }, 200);
                     } catch(e) {}
                 };
+            }
+            
+            // Функция для показа уведомления 10 уровня
+            function showLevelTenAlertMessage() {
+                if (hasShownLevelTenAlert) return;
+                
+                levelTenAlert.style.display = 'block';
+                hasShownLevelTenAlert = true;
+                
+                setTimeout(() => {
+                    levelTenAlert.style.display = 'none';
+                }, 5000);
             }
             
             // Функции для работы с деревьями и лесорубами
@@ -2928,7 +2965,7 @@
                             }
                         } else {
                             // Показать ошибку при попытке посадить во время кулдауна
-                            showPlantCooldownError();
+                                showPlantCooldownError();
                         }
                     });
                 }
@@ -3149,6 +3186,7 @@
                 // Сброс новых флагов уведомлений
                 hasShownFirstLumberjackWarning = false;
                 hasShownLevelTwoShopAlert = false;
+                hasShownLevelTenAlert = false;
                 
                 scoreFromPreviousLevel = 0;
                 scoreInCurrentLevel = 0;
@@ -3398,6 +3436,9 @@
                 lumberjacks.forEach(lumberjack => {
                     lumberjack.active = false;
                     
+                    // УДАЛЯЕМ ПАЛЕЦ ПРИ УДАЛЕНИИ ВСЕХ ЛЕСОРУБОВ
+                    hideFinger(lumberjack);
+                    
                     if (lumberjack.moveAnimation) {
                         cancelAnimationFrame(lumberjack.moveAnimation);
                     }
@@ -3429,7 +3470,7 @@
                 
                 lumberjackTimer = 20;
                 lumberjackTimerElement.style.display = 'block';
-                lumberjackTimerElement.textContent = `Нелегальные лесорубы через: ${lumberjackTimer}с`;
+                lumberjackTimerElement.textContent = `Лесорубы через: ${lumberjackTimer}с`;
                 
                 if (lumberjackInterval) {
                     clearInterval(lumberjackInterval);
@@ -3440,7 +3481,7 @@
                     if (gamePaused) return;
                     
                     lumberjackTimer--;
-                    lumberjackTimerElement.textContent = `Нелегальные лесорубы через: ${lumberjackTimer}с`;
+                    lumberjackTimerElement.textContent = `Лесорубы через: ${lumberjackTimer}с`;
                     
                     if (lumberjackTimer <= 0) {
                         clearInterval(lumberjackTimerInterval);
@@ -3672,6 +3713,7 @@
                     }, 500);
                 }
                 
+                // УЛУЧШЕННОЕ УДАЛЕНИЕ ЛУЖ
                 const puddle = treeObj.container.querySelector('.water-puddle');
                 if (puddle) {
                     puddle.style.opacity = '0';
@@ -3681,6 +3723,17 @@
                         }
                     }, 500);
                 }
+                
+                // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: удаляем все лужи в контейнере дерева
+                const allPuddles = treeObj.container.querySelectorAll('.water-puddle');
+                allPuddles.forEach(puddle => {
+                    puddle.style.opacity = '0';
+                    setTimeout(() => {
+                        if (puddle.parentNode) {
+                            puddle.parentNode.removeChild(puddle);
+                        }
+                    }, 500);
+                });
                 
                 checkLevelUp();
             }
@@ -3826,8 +3879,11 @@
                 
                 lumberjack.appendChild(lumberjackContent);
                 
+                // УВЕЛИЧЕННЫЙ ХИТБОКС - с 60px до 120px
                 const lumberjackHitbox = document.createElement('div');
                 lumberjackHitbox.className = 'lumberjack-hitbox';
+                lumberjackHitbox.style.width = '120px';
+                lumberjackHitbox.style.height = '120px';
                 lumberjack.appendChild(lumberjackHitbox);
                 
                 const side = Math.floor(Math.random() * 4);
@@ -3987,6 +4043,7 @@
                 lumberjackObj.isRunningAway = true;
                 lumberjackObj.active = false;
                 
+                // УДАЛЯЕМ ПАЛЕЦ ПРИ УХОДЕ ЛЕСОРУБА
                 hideFinger(lumberjackObj);
                 
                 if (lumberjackObj.attackInterval) {
@@ -4258,6 +4315,9 @@
                 lumberjack.active = false;
                 lumberjack.isAttacking = false;
                 
+                // УДАЛЯЕМ ПАЛЕЦ ПРИ УДАЛЕНИИ ЛЕСОРУБА
+                hideFinger(lumberjack);
+                
                 if (lumberjack.axe) {
                     lumberjack.axe.classList.remove('axe-swing-continuous');
                     lumberjack.axe.classList.remove('axe-swing');
@@ -4273,11 +4333,12 @@
                     clearInterval(lumberjack.securityDamageInterval);
                 }
                 
-                hideFinger(lumberjack);
-                
                 lumberjack.element.classList.add('lumberjack-leaving');
                 
                 setTimeout(() => {
+                    // ЕЩЕ РАЗ ПРОВЕРЯЕМ И УДАЛЯЕМ ПАЛЕЦ
+                    hideFinger(lumberjack);
+                    
                     if (lumberjack.element.parentNode) {
                         gameField.removeChild(lumberjack.element);
                     }
@@ -4386,6 +4447,11 @@
                     level++;
                     
                     playSound('levelUpSound', 0.6);
+                    
+                    // Показываем уведомление для 10 уровня
+                    if (level === 10 && !hasShownLevelTenAlert) {
+                        showLevelTenAlertMessage();
+                    }
                     
                     // Убрана пауза на 12 уровне
                     if (level > MAX_LEVEL) {
